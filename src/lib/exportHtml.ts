@@ -1,5 +1,15 @@
 import { CVData } from "@/types/cv";
 
+// Escapes user-provided text so it can't inject markup into the exported file
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function formatDate(d: string) {
   if (!d) return "";
   const [year, month] = d.split("-");
@@ -12,11 +22,11 @@ export function exportToHtml(data: CVData) {
   const fullName = `${personal.firstName} ${personal.lastName}`.trim();
 
   const contacts = [
-    personal.email && `<span>✉ ${personal.email}</span>`,
-    personal.phone && `<span>☎ ${personal.phone}</span>`,
-    personal.location && `<span>⌖ ${personal.location}</span>`,
-    personal.website && `<span>🌐 ${personal.website}</span>`,
-    personal.linkedin && `<span>in ${personal.linkedin}</span>`,
+    personal.email && `<span>✉ ${esc(personal.email)}</span>`,
+    personal.phone && `<span>☎ ${esc(personal.phone)}</span>`,
+    personal.location && `<span>⌖ ${esc(personal.location)}</span>`,
+    personal.website && `<span>🌐 ${esc(personal.website)}</span>`,
+    personal.linkedin && `<span>in ${esc(personal.linkedin)}</span>`,
   ]
     .filter(Boolean)
     .join(" &nbsp;|&nbsp; ");
@@ -25,15 +35,15 @@ export function exportToHtml(data: CVData) {
     .map(
       (e) => `
     <div class="entry">
-      ${e.company ? `<strong class="company">${e.company}</strong>` : ""}
+      ${e.company ? `<strong class="company">${esc(e.company)}</strong>` : ""}
       <div class="positions">
         ${e.positions.map(pos => `
           <div class="position">
             <div class="entry-header">
-              <strong>${pos.title}</strong>
+              <strong>${esc(pos.title)}</strong>
               <span class="date">${formatDate(pos.startDate)} – ${pos.current ? "Prezent" : formatDate(pos.endDate)}</span>
             </div>
-            ${pos.description ? `<p>${pos.description}</p>` : ""}
+            ${pos.description ? `<p>${esc(pos.description)}</p>` : ""}
           </div>`).join("")}
       </div>
     </div>`
@@ -46,8 +56,8 @@ export function exportToHtml(data: CVData) {
     <div class="entry">
       <div class="entry-header">
         <div>
-          <strong>${e.degree}${e.field ? ` în ${e.field}` : ""}</strong>
-          <span class="muted">${e.institution}</span>
+          <strong>${esc(e.degree)}${e.field ? ` în ${esc(e.field)}` : ""}</strong>
+          <span class="muted">${esc(e.institution)}</span>
         </div>
         <span class="date">${formatDate(e.startDate)} – ${formatDate(e.endDate)}</span>
       </div>
@@ -56,15 +66,15 @@ export function exportToHtml(data: CVData) {
     .join("");
 
   const skillsHtml = skills
-    .map((s) => `<div class="skill-item"><span>${s.name}</span><span class="muted">${s.level}</span></div>`)
+    .map((s) => `<div class="skill-item"><span>${esc(s.name)}</span><span class="muted">${esc(s.level)}</span></div>`)
     .join("");
 
   const langsHtml = languages
-    .map((l) => `<div class="skill-item"><span>${l.name}</span><span class="muted">${l.level}</span></div>`)
+    .map((l) => `<div class="skill-item"><span>${esc(l.name)}</span><span class="muted">${esc(l.level)}</span></div>`)
     .join("");
 
   const licensesHtml = (drivingLicenses ?? [])
-    .map((d) => `<span class="license"><strong>Categoria ${d.category}</strong>${d.year ? ` <span class="muted">· ${d.year}</span>` : ""}</span>`)
+    .map((d) => `<span class="license"><strong>Categoria ${esc(d.category)}</strong>${d.year ? ` <span class="muted">· ${esc(d.year)}</span>` : ""}</span>`)
     .join("");
 
   const html = `<!DOCTYPE html>
@@ -72,7 +82,7 @@ export function exportToHtml(data: CVData) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CV – ${fullName}</title>
+  <title>CV – ${esc(fullName)}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1f2937; background: #f3f4f6; }
@@ -104,11 +114,11 @@ export function exportToHtml(data: CVData) {
 <body>
   <div class="page">
     <header>
-      <h1>${fullName || "Nume Prenume"}</h1>
+      <h1>${esc(fullName) || "Nume Prenume"}</h1>
       <div class="contacts">${contacts}</div>
     </header>
     <main>
-      ${personal.summary ? `<section><h2>Profil</h2><p>${personal.summary}</p></section>` : ""}
+      ${personal.summary ? `<section><h2>Profil</h2><p>${esc(personal.summary)}</p></section>` : ""}
       ${experience.length ? `<section><h2>Experiență profesională</h2>${expHtml}</section>` : ""}
       ${education.length ? `<section><h2>Educație</h2>${eduHtml}</section>` : ""}
       ${skills.length || languages.length ? `
@@ -122,9 +132,11 @@ export function exportToHtml(data: CVData) {
 </body>
 </html>`;
 
+  // "<" is escaped so user text like "</script>" can't break out of the embed
+  const embedJson = JSON.stringify({ version: "1", data }).replace(/</g, "\\u003c");
   const htmlWithData = html.replace(
     "</body>",
-    `<script type="application/json" id="cv-data">${JSON.stringify({ version: "1", data })}</script>\n</body>`
+    `<script type="application/json" id="cv-data">${embedJson}</script>\n</body>`
   );
   const blob = new Blob([htmlWithData], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);

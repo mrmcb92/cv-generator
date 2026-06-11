@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { CVData, defaultCV } from "@/types/cv";
+import { validateCV } from "@/lib/validateCv";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import PersonalSection  from "@/components/CVForm/PersonalSection";
 import ExperienceSection from "@/components/CVForm/ExperienceSection";
@@ -240,17 +241,12 @@ function TemplatePicker({
 
 const LS_KEY = "cv-generator-data";
 
-// Fills in fields added after older saves/exports were created
-function migrate(data: CVData): CVData {
-  return { ...defaultCV, ...data, drivingLicenses: data.drivingLicenses ?? [] };
-}
-
 function loadFromStorage(): CVData | null {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    return parsed?.version === "1" ? migrate(parsed.data as CVData) : null;
+    return parsed?.version === "1" ? validateCV(parsed.data) : null;
   } catch { return null; }
 }
 
@@ -268,8 +264,11 @@ function App() {
     if (stored) setCv(stored);
   }, []);
 
-  // Auto-save to localStorage on every change
+  // Auto-save to localStorage on every change. While cv is still the pristine
+  // module-level defaultCV (same reference), nothing has been loaded or typed
+  // yet — saving then could overwrite stored data with an empty CV.
   useEffect(() => {
+    if (cv === defaultCV) return;
     localStorage.setItem(LS_KEY, JSON.stringify({ version: "1", data: cv }));
   }, [cv]);
 
@@ -278,18 +277,22 @@ function App() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
+      let data: CVData | null = null;
       try {
         const text = ev.target?.result as string;
-        let data: CVData | null = null;
         if (file.name.endsWith(".html") || file.name.endsWith(".htm")) {
           const match = text.match(/<script[^>]+id="cv-data"[^>]*>([\s\S]*?)<\/script>/);
-          if (match) data = JSON.parse(match[1])?.data ?? null;
+          if (match) data = validateCV(JSON.parse(match[1])?.data);
         } else {
           const obj = JSON.parse(text);
-          data = (obj?.version === "1" ? obj.data : obj) as CVData;
+          data = validateCV(obj?.version === "1" ? obj.data : obj);
         }
-        if (data) setCv(migrate(data));
-      } catch { /* ignore malformed files */ }
+      } catch { data = null; }
+      if (data) {
+        setCv(data);
+      } else {
+        alert("Fișierul nu a putut fi importat — nu conține date de CV valide.");
+      }
     };
     reader.readAsText(file);
     e.target.value = "";
