@@ -14,12 +14,7 @@ import {
 import { saveAs } from "file-saver";
 import { CVData } from "@/types/cv";
 
-function formatDate(d: string) {
-  if (!d) return "";
-  const [year, month] = d.split("-");
-  const months = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `${months[parseInt(month) - 1]} ${year}`;
-}
+import { fmtDate as formatDate } from "@/lib/format";
 
 function sectionHeading(text: string): Paragraph {
   return new Paragraph({

@@ -307,12 +307,15 @@ function App() {
     localStorage.setItem(LS_TEMPLATE_KEY, id);
   };
 
-  // Auto-save to localStorage on every change. While cv is still the pristine
+  // Debounced auto-save to localStorage. While cv is still the pristine
   // module-level defaultCV (same reference), nothing has been loaded or typed
   // yet — saving then could overwrite stored data with an empty CV.
   useEffect(() => {
     if (cv === defaultCV) return;
-    localStorage.setItem(LS_KEY, JSON.stringify({ version: "1", data: cv }));
+    const t = setTimeout(() => {
+      localStorage.setItem(LS_KEY, JSON.stringify({ version: "1", data: cv }));
+    }, 400);
+    return () => clearTimeout(t);
   }, [cv]);
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {

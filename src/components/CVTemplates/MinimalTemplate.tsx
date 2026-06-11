@@ -2,11 +2,7 @@
 
 import { CVData } from "@/types/cv";
 
-function fmt(d: string) {
-  if (!d) return "";
-  const [y, m] = d.split("-");
-  return `${["Ian","Feb","Mar","Apr","Mai","Iun","Iul","Aug","Sep","Oct","Nov","Dec"][+m - 1]} ${y}`;
-}
+import { fmtDate as fmt } from "@/lib/format";
 
 export default function MinimalTemplate({ data }: { data: CVData }) {
   const { personal: p, experience, education, skills, languages, drivingLicenses } = data;

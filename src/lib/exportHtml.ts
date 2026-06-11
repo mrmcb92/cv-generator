@@ -10,12 +10,7 @@ function esc(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function formatDate(d: string) {
-  if (!d) return "";
-  const [year, month] = d.split("-");
-  const months = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `${months[parseInt(month) - 1]} ${year}`;
-}
+import { fmtDate as formatDate } from "@/lib/format";
 
 export function exportToHtml(data: CVData) {
   const { personal, experience, education, skills, languages, drivingLicenses } = data;

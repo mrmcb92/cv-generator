@@ -24,12 +24,7 @@ Font.register({
 });
 
 // ─── Shared helpers ───────────────────────────────────────────────
-function fmtDate(d: string) {
-  if (!d) return "";
-  const [y, m] = d.split("-");
-  const mo = ["Ian","Feb","Mar","Apr","Mai","Iun","Iul","Aug","Sep","Oct","Nov","Dec"];
-  return `${mo[(+m || 1) - 1] ?? ""} ${y}`;
-}
+import { fmtDate } from "@/lib/format";
 
 const LEVEL_W: Record<string, string> = {
   Expert: "100%", Avansat: "75%", Mediu: "50%", "Începător": "25%",
