@@ -1,7 +1,7 @@
 "use client";
 
 import { CVData } from "@/types/cv";
-import { Mail, Phone, MapPin, Globe, Link2 } from "lucide-react";
+import { EnvelopeSimple as Mail, Phone, MapPin, Globe, LinkSimple as Link2 } from "@phosphor-icons/react";
 
 function fmt(d: string) {
   if (!d) return "";

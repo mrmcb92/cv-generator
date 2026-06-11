@@ -240,6 +240,34 @@ function TemplatePicker({
 }
 
 const LS_KEY = "cv-generator-data";
+const LS_TEMPLATE_KEY = "cv-generator-template";
+
+type Toast = { id: number; message: string; kind: "success" | "error" };
+
+let toastCounter = 0;
+
+function ToastStack({ toasts }: { toasts: Toast[] }) {
+  return (
+    <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none">
+      <AnimatePresence>
+        {toasts.map((t) => (
+          <motion.div
+            key={t.id}
+            initial={{ opacity: 0, y: 16, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className={`px-4 py-2.5 rounded-full text-[12px] font-medium text-white shadow-lg ${
+              t.kind === "error" ? "bg-red-500/95" : "bg-emerald-600/95"
+            }`}
+          >
+            {t.message}
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 function loadFromStorage(): CVData | null {
   try {
@@ -256,13 +284,28 @@ function App() {
   const [activeTab, setActiveTab] = useState<Tab>("personal");
   const [templateId, setTemplateId] = useState<TemplateId>("classic");
   const [exporting, setExporting] = useState<string | null>(null);
+  const [toasts, setToasts] = useState<Toast[]>([]);
   const importRef = useRef<HTMLInputElement>(null);
+
+  const showToast = (message: string, kind: Toast["kind"] = "success") => {
+    const id = ++toastCounter;
+    setToasts((prev) => [...prev, { id, message, kind }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+  };
 
   // Load from localStorage after mount (avoids SSR hydration mismatch)
   useEffect(() => {
     const stored = loadFromStorage();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from localStorage, must run after mount
     if (stored) setCv(stored);
+    const tpl = localStorage.getItem(LS_TEMPLATE_KEY) as TemplateId | null;
+    if (tpl && cvTemplates.some((t) => t.id === tpl)) setTemplateId(tpl);
   }, []);
+
+  const changeTemplate = (id: TemplateId) => {
+    setTemplateId(id);
+    localStorage.setItem(LS_TEMPLATE_KEY, id);
+  };
 
   // Auto-save to localStorage on every change. While cv is still the pristine
   // module-level defaultCV (same reference), nothing has been loaded or typed
@@ -290,8 +333,9 @@ function App() {
       } catch { data = null; }
       if (data) {
         setCv(data);
+        showToast("CV importat cu succes");
       } else {
-        alert("Fișierul nu a putut fi importat — nu conține date de CV valide.");
+        showToast("Fișierul nu conține date de CV valide", "error");
       }
     };
     reader.readAsText(file);
@@ -309,6 +353,7 @@ function App() {
     a.download = `cv-${cv.personal.lastName || "export"}.cv.json`;
     a.click();
     URL.revokeObjectURL(url);
+    showToast("CV salvat — păstrează fișierul pentru re-import");
   };
 
   const handleExport = async (type: "pdf" | "docx" | "html") => {
@@ -324,6 +369,9 @@ function App() {
         const { exportToHtml } = await import("@/lib/exportHtml");
         exportToHtml(cv);
       }
+    } catch (err) {
+      console.error("Export failed:", err);
+      showToast(`Exportul ${type.toUpperCase()} a eșuat — încearcă din nou`, "error");
     } finally { setExporting(null); }
   };
 
@@ -483,7 +531,7 @@ function App() {
           style={{ background: RIGHT_PANEL_BG[theme.id] }}
         >
           {/* Template picker bar */}
-          <TemplatePicker selected={templateId} onChange={setTemplateId} isDark={isDark} />
+          <TemplatePicker selected={templateId} onChange={changeTemplate} isDark={isDark} />
 
           {/* CV preview */}
           <div className="flex-1 overflow-y-auto p-6">
@@ -501,6 +549,8 @@ function App() {
           </div>
         </div>
       </div>
+
+      <ToastStack toasts={toasts} />
     </div>
   );
 }
