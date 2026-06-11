@@ -2,6 +2,7 @@
 
 import { CVData } from "@/types/cv";
 import { TemplateId } from "@/types/template";
+import { CvLang } from "@/lib/cvLabels";
 import ClassicTemplate  from "./CVTemplates/ClassicTemplate";
 import ModernTemplate   from "./CVTemplates/ModernTemplate";
 import MinimalTemplate  from "./CVTemplates/MinimalTemplate";
@@ -10,6 +11,7 @@ import CreativeTemplate from "./CVTemplates/CreativeTemplate";
 interface Props {
   data: CVData;
   templateId: TemplateId;
+  lang?: CvLang;
 }
 
 // Dashed overlay marking where each A4 page ends, so the user can see
@@ -34,13 +36,13 @@ function PageBreakGuide() {
   );
 }
 
-export default function CVPreview({ data, templateId }: Props) {
+export default function CVPreview({ data, templateId, lang = "ro" }: Props) {
   let template: React.ReactNode;
   switch (templateId) {
-    case "modern":   template = <ModernTemplate   data={data} />; break;
-    case "minimal":  template = <MinimalTemplate  data={data} />; break;
-    case "creative": template = <CreativeTemplate data={data} />; break;
-    default:         template = <ClassicTemplate  data={data} />; break;
+    case "modern":   template = <ModernTemplate   data={data} lang={lang} />; break;
+    case "minimal":  template = <MinimalTemplate  data={data} lang={lang} />; break;
+    case "creative": template = <CreativeTemplate data={data} lang={lang} />; break;
+    default:         template = <ClassicTemplate  data={data} lang={lang} />; break;
   }
   return (
     <div className="relative w-full max-w-[210mm] mx-auto">

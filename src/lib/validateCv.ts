@@ -90,6 +90,17 @@ export function validateCV(input: unknown): CVData | null {
       category: oneOf<DrivingCategory>(dl.category, DRIVING_CATEGORIES, "B"),
       year: str(dl.year),
     })),
+    customSections: arr(d.customSections).map((cs) => ({
+      id: id(cs.id),
+      title: str(cs.title),
+      items: arr(cs.items).map((it) => ({
+        id: id(it.id),
+        name: str(it.name),
+        subtitle: str(it.subtitle),
+        date: str(it.date),
+        description: str(it.description),
+      })),
+    })),
   };
 }
 

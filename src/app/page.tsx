@@ -9,23 +9,26 @@ import PersonalSection  from "@/components/CVForm/PersonalSection";
 import ExperienceSection from "@/components/CVForm/ExperienceSection";
 import EducationSection from "@/components/CVForm/EducationSection";
 import SkillsSection    from "@/components/CVForm/SkillsSection";
+import CustomSectionsForm from "@/components/CVForm/CustomSectionsForm";
 import CVPreview        from "@/components/CVPreview";
 import { cvTemplates, TemplateId } from "@/types/template";
+import { CvLang } from "@/lib/cvLabels";
 import {
   FilePdf, FileDoc, FileHtml, FileArrowDown, UploadSimple,
-  User, Briefcase, GraduationCap, Star,
-  ArrowUpRight, Circle,
+  User, Briefcase, GraduationCap, Star, Stack,
+  ArrowUpRight, Circle, Plus, PencilSimple, Trash,
 } from "@phosphor-icons/react";
 import { themes, ThemeId } from "@/types/theme";
 import { useTheme as useAppTheme } from "@/context/ThemeContext";
 
-type Tab = "personal" | "experience" | "education" | "skills";
+type Tab = "personal" | "experience" | "education" | "skills" | "other";
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: "personal",   label: "Personal",   icon: User },
   { id: "experience", label: "Experiență", icon: Briefcase },
   { id: "education",  label: "Educație",   icon: GraduationCap },
   { id: "skills",     label: "Competențe", icon: Star },
+  { id: "other",      label: "Altele",     icon: Stack },
 ];
 
 const THEME_LABELS: Record<ThemeId, string> = {
@@ -278,13 +281,37 @@ function loadFromStorage(): CVData | null {
   } catch { return null; }
 }
 
+// ── Multiple CV profiles, stored together under one key ──
+const PROFILES_KEY = "cv-generator-profiles";
+const LS_LANG_KEY  = "cv-generator-lang";
+
+interface StoredProfile { id: string; name: string; data: CVData }
+interface ProfilesStore { version: "2"; activeId: string; profiles: StoredProfile[] }
+
+function loadProfilesStore(): ProfilesStore | null {
+  try {
+    const raw = localStorage.getItem(PROFILES_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (p?.version !== "2" || !Array.isArray(p.profiles) || p.profiles.length === 0) return null;
+    return p as ProfilesStore;
+  } catch { return null; }
+}
+
+function saveProfilesStore(store: ProfilesStore) {
+  localStorage.setItem(PROFILES_KEY, JSON.stringify(store));
+}
+
 function App() {
   const { theme } = useTheme();
   const [cv, setCv]               = useState<CVData>(defaultCV);
   const [activeTab, setActiveTab] = useState<Tab>("personal");
   const [templateId, setTemplateId] = useState<TemplateId>("classic");
+  const [cvLang, setCvLang]       = useState<CvLang>("ro");
   const [exporting, setExporting] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [profiles, setProfiles] = useState<{ id: string; name: string }[]>([]);
+  const [activeProfileId, setActiveProfileId] = useState<string>("");
   // Which panel is visible on small screens (desktop always shows both)
   const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
   const importRef = useRef<HTMLInputElement>(null);
@@ -297,11 +324,25 @@ function App() {
 
   // Load from localStorage after mount (avoids SSR hydration mismatch)
   useEffect(() => {
-    const stored = loadFromStorage();
+    let store = loadProfilesStore();
+    if (!store) {
+      // first run or pre-profiles save: migrate the legacy single CV
+      const legacy = loadFromStorage();
+      const id = crypto.randomUUID();
+      store = { version: "2", activeId: id, profiles: [{ id, name: "CV principal", data: legacy ?? defaultCV }] };
+      saveProfilesStore(store);
+    }
+    const active = store.profiles.find((p) => p.id === store.activeId) ?? store.profiles[0];
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from localStorage, must run after mount
-    if (stored) setCv(stored);
+    setProfiles(store.profiles.map(({ id, name }) => ({ id, name })));
+    setActiveProfileId(active.id);
+    const valid = validateCV(active.data);
+    if (valid) setCv(valid);
+
     const tpl = localStorage.getItem(LS_TEMPLATE_KEY) as TemplateId | null;
     if (tpl && cvTemplates.some((t) => t.id === tpl)) setTemplateId(tpl);
+    const lng = localStorage.getItem(LS_LANG_KEY);
+    if (lng === "ro" || lng === "en") setCvLang(lng);
   }, []);
 
   const changeTemplate = (id: TemplateId) => {
@@ -309,16 +350,99 @@ function App() {
     localStorage.setItem(LS_TEMPLATE_KEY, id);
   };
 
-  // Debounced auto-save to localStorage. While cv is still the pristine
-  // module-level defaultCV (same reference), nothing has been loaded or typed
-  // yet — saving then could overwrite stored data with an empty CV.
+  const changeLang = (lng: CvLang) => {
+    setCvLang(lng);
+    localStorage.setItem(LS_LANG_KEY, lng);
+  };
+
+  // Debounced auto-save into the active profile. While cv is still the
+  // pristine module-level defaultCV (same reference), nothing has been
+  // loaded or typed yet — saving then could overwrite stored data.
   useEffect(() => {
-    if (cv === defaultCV) return;
+    if (cv === defaultCV || !activeProfileId) return;
     const t = setTimeout(() => {
-      localStorage.setItem(LS_KEY, JSON.stringify({ version: "1", data: cv }));
+      const store = loadProfilesStore();
+      if (!store) return;
+      saveProfilesStore({
+        ...store,
+        activeId: activeProfileId,
+        profiles: store.profiles.map((p) => p.id === activeProfileId ? { ...p, data: cv } : p),
+      });
     }, 400);
     return () => clearTimeout(t);
-  }, [cv]);
+  }, [cv, activeProfileId]);
+
+  // ── Profile actions ──
+  const switchProfile = (id: string) => {
+    if (id === activeProfileId) return;
+    const store = loadProfilesStore();
+    if (!store) return;
+    // persist the CV being left before loading the next one
+    const updated: ProfilesStore = {
+      ...store,
+      activeId: id,
+      profiles: store.profiles.map((p) => p.id === activeProfileId ? { ...p, data: cv } : p),
+    };
+    const target = updated.profiles.find((p) => p.id === id);
+    if (!target) return;
+    saveProfilesStore(updated);
+    setActiveProfileId(id);
+    setCv(validateCV(target.data) ?? { ...defaultCV });
+  };
+
+  const newProfile = () => {
+    const name = prompt("Numele noului CV:", `CV ${profiles.length + 1}`)?.trim();
+    if (!name) return;
+    const id = crypto.randomUUID();
+    const store = loadProfilesStore();
+    if (!store) return;
+    const updated: ProfilesStore = {
+      ...store,
+      activeId: id,
+      profiles: [
+        ...store.profiles.map((p) => p.id === activeProfileId ? { ...p, data: cv } : p),
+        { id, name, data: defaultCV },
+      ],
+    };
+    saveProfilesStore(updated);
+    setProfiles(updated.profiles.map(({ id: i, name: n }) => ({ id: i, name: n })));
+    setActiveProfileId(id);
+    setCv({ ...defaultCV });
+    showToast(`Profil „${name}" creat`);
+  };
+
+  const renameProfile = () => {
+    const current = profiles.find((p) => p.id === activeProfileId);
+    const name = prompt("Noul nume al CV-ului:", current?.name ?? "")?.trim();
+    if (!name) return;
+    const store = loadProfilesStore();
+    if (!store) return;
+    const updated = {
+      ...store,
+      profiles: store.profiles.map((p) => p.id === activeProfileId ? { ...p, name } : p),
+    };
+    saveProfilesStore(updated);
+    setProfiles(updated.profiles.map(({ id, name: n }) => ({ id, name: n })));
+  };
+
+  const deleteProfile = () => {
+    if (profiles.length <= 1) {
+      showToast("Nu poți șterge singurul profil", "error");
+      return;
+    }
+    const current = profiles.find((p) => p.id === activeProfileId);
+    if (!confirm(`Ștergi definitiv profilul „${current?.name}"?`)) return;
+    const store = loadProfilesStore();
+    if (!store) return;
+    const remaining = store.profiles.filter((p) => p.id !== activeProfileId);
+    const next = remaining[0];
+    const updated: ProfilesStore = { ...store, activeId: next.id, profiles: remaining };
+    saveProfilesStore(updated);
+    setProfiles(remaining.map(({ id, name }) => ({ id, name })));
+    setActiveProfileId(next.id);
+    setCv(validateCV(next.data) ?? { ...defaultCV });
+    showToast("Profil șters");
+  };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -366,13 +490,13 @@ function App() {
     try {
       if (type === "pdf") {
         const { exportToPdf } = await import("@/lib/exportPdf");
-        await exportToPdf(cv.personal.lastName, cv, templateId);
+        await exportToPdf(cv.personal.lastName, cv, templateId, cvLang);
       } else if (type === "docx") {
         const { exportToDocx } = await import("@/lib/exportDocx");
-        await exportToDocx(cv);
+        await exportToDocx(cv, cvLang);
       } else {
         const { exportToHtml } = await import("@/lib/exportHtml");
-        exportToHtml(cv);
+        exportToHtml(cv, cvLang);
       }
     } catch (err) {
       console.error("Export failed:", err);
@@ -398,6 +522,45 @@ function App() {
         </div>
 
         <ThemePicker />
+
+        {/* Profile selector */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <select
+            value={activeProfileId}
+            onChange={(e) => switchProfile(e.target.value)}
+            aria-label="Profil CV activ"
+            className={`text-[11px] font-medium rounded-full px-2.5 py-1 outline-none cursor-pointer max-w-[140px] ${isDark ? "bg-white/8 text-white/80" : "bg-black/8 text-zinc-700"}`}
+          >
+            {profiles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <button onClick={newProfile} title="CV nou" aria-label="Creează profil CV nou"
+            className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/10" : "text-zinc-500 hover:text-zinc-900 hover:bg-black/8"}`}>
+            <Plus size={11} weight="bold" />
+          </button>
+          <button onClick={renameProfile} title="Redenumește" aria-label="Redenumește profilul activ"
+            className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/10" : "text-zinc-500 hover:text-zinc-900 hover:bg-black/8"}`}>
+            <PencilSimple size={11} weight="bold" />
+          </button>
+          <button onClick={deleteProfile} title="Șterge profilul" aria-label="Șterge profilul activ"
+            className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDark ? "text-white/50 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-500 hover:text-red-500 hover:bg-red-50"}`}>
+            <Trash size={11} weight="bold" />
+          </button>
+        </div>
+
+        {/* CV language toggle */}
+        <div className={`flex items-center rounded-full p-0.5 flex-shrink-0 ${isDark ? "bg-white/8" : "bg-black/8"}`} title="Limba CV-ului (etichetele secțiunilor)">
+          {(["ro", "en"] as const).map((lng) => (
+            <button key={lng} onClick={() => changeLang(lng)}
+              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase transition-all ${
+                cvLang === lng
+                  ? "bg-sky-500 text-white"
+                  : isDark ? "text-white/50 hover:text-white/80" : "text-zinc-500 hover:text-zinc-800"
+              }`}>
+              {lng}
+            </button>
+          ))}
+        </div>
+
         <div className="flex-1" />
 
         {/* Import hidden input */}
@@ -525,6 +688,7 @@ function App() {
                 {activeTab === "experience" && <ExperienceSection data={cv.experience} onChange={(experience) => setCv({ ...cv, experience })} theme={theme} />}
                 {activeTab === "education"  && <EducationSection  data={cv.education}  onChange={(education)  => setCv({ ...cv, education })}  theme={theme} />}
                 {activeTab === "skills"     && <SkillsSection skills={cv.skills} languages={cv.languages} drivingLicenses={cv.drivingLicenses} onSkillsChange={(skills) => setCv({ ...cv, skills })} onLanguagesChange={(languages) => setCv({ ...cv, languages })} onDrivingChange={(drivingLicenses) => setCv({ ...cv, drivingLicenses })} theme={theme} />}
+                {activeTab === "other"      && <CustomSectionsForm data={cv.customSections} onChange={(customSections) => setCv({ ...cv, customSections })} theme={theme} />}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -548,7 +712,7 @@ function App() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
               >
-                <CVPreview data={cv} templateId={templateId} />
+                <CVPreview data={cv} templateId={templateId} lang={cvLang} />
               </motion.div>
             </AnimatePresence>
           </div>

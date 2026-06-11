@@ -10,10 +10,12 @@ function esc(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-import { fmtDate as formatDate } from "@/lib/format";
+import { CV_LABELS, CvLang, fmtDate } from "@/lib/cvLabels";
 
-export function exportToHtml(data: CVData) {
-  const { personal, experience, education, skills, languages, drivingLicenses } = data;
+export function exportToHtml(data: CVData, lang: CvLang = "ro") {
+  const { personal, experience, education, skills, languages, drivingLicenses, customSections } = data;
+  const L = CV_LABELS[lang];
+  const formatDate = (d: string) => fmtDate(d, lang);
   const fullName = `${personal.firstName} ${personal.lastName}`.trim();
 
   const contacts = [
@@ -36,7 +38,7 @@ export function exportToHtml(data: CVData) {
           <div class="position">
             <div class="entry-header">
               <strong>${esc(pos.title)}</strong>
-              <span class="date">${formatDate(pos.startDate)} – ${pos.current ? "Prezent" : formatDate(pos.endDate)}</span>
+              <span class="date">${formatDate(pos.startDate)} – ${pos.current ? L.present : formatDate(pos.endDate)}</span>
             </div>
             ${pos.description ? `<p>${esc(pos.description)}</p>` : ""}
           </div>`).join("")}
@@ -51,7 +53,7 @@ export function exportToHtml(data: CVData) {
     <div class="entry">
       <div class="entry-header">
         <div>
-          <strong>${esc(e.degree)}${e.field ? ` în ${esc(e.field)}` : ""}</strong>
+          <strong>${esc(e.degree)}${e.field ? ` ${L.inWord} ${esc(e.field)}` : ""}</strong>
           <span class="muted">${esc(e.institution)}</span>
         </div>
         <span class="date">${formatDate(e.startDate)} – ${formatDate(e.endDate)}</span>
@@ -68,12 +70,31 @@ export function exportToHtml(data: CVData) {
     .map((l) => `<div class="skill-item"><span>${esc(l.name)}</span><span class="muted">${esc(l.level)}</span></div>`)
     .join("");
 
+  const customHtml = (customSections ?? [])
+    .filter((cs) => cs.title && cs.items.length > 0)
+    .map((cs) => `
+    <section>
+      <h2>${esc(cs.title)}</h2>
+      ${cs.items.map((it) => `
+      <div class="entry">
+        <div class="entry-header">
+          <div>
+            <strong>${esc(it.name)}</strong>
+            ${it.subtitle ? `<span class="muted">${esc(it.subtitle)}</span>` : ""}
+          </div>
+          ${it.date ? `<span class="date">${esc(it.date)}</span>` : ""}
+        </div>
+        ${it.description ? `<p>${esc(it.description)}</p>` : ""}
+      </div>`).join("")}
+    </section>`)
+    .join("");
+
   const licensesHtml = (drivingLicenses ?? [])
-    .map((d) => `<span class="license"><strong>Categoria ${esc(d.category)}</strong>${d.year ? ` <span class="muted">· ${esc(d.year)}</span>` : ""}</span>`)
+    .map((d) => `<span class="license"><strong>${L.category} ${esc(d.category)}</strong>${d.year ? ` <span class="muted">· ${esc(d.year)}</span>` : ""}</span>`)
     .join("");
 
   const html = `<!DOCTYPE html>
-<html lang="ro">
+<html lang="${lang}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -117,15 +138,16 @@ export function exportToHtml(data: CVData) {
       ${personal.photo?.startsWith("data:image/") ? `<img class="photo" src="${personal.photo}" alt="" />` : ""}
     </header>
     <main>
-      ${personal.summary ? `<section><h2>Profil</h2><p>${esc(personal.summary)}</p></section>` : ""}
-      ${experience.length ? `<section><h2>Experiență profesională</h2>${expHtml}</section>` : ""}
-      ${education.length ? `<section><h2>Educație</h2>${eduHtml}</section>` : ""}
+      ${personal.summary ? `<section><h2>${L.profile}</h2><p>${esc(personal.summary)}</p></section>` : ""}
+      ${experience.length ? `<section><h2>${L.experience}</h2>${expHtml}</section>` : ""}
+      ${education.length ? `<section><h2>${L.education}</h2>${eduHtml}</section>` : ""}
       ${skills.length || languages.length ? `
       <div class="two-col">
-        ${skills.length ? `<section><h2>Competențe</h2>${skillsHtml}</section>` : ""}
-        ${languages.length ? `<section><h2>Limbi străine</h2>${langsHtml}</section>` : ""}
+        ${skills.length ? `<section><h2>${L.skills}</h2>${skillsHtml}</section>` : ""}
+        ${languages.length ? `<section><h2>${L.languages}</h2>${langsHtml}</section>` : ""}
       </div>` : ""}
-      ${licensesHtml ? `<section><h2>Permis de conducere</h2><div class="licenses">${licensesHtml}</div></section>` : ""}
+      ${customHtml}
+      ${licensesHtml ? `<section><h2>${L.driving}</h2><div class="licenses">${licensesHtml}</div></section>` : ""}
     </main>
   </div>
 </body>

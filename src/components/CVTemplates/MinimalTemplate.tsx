@@ -2,10 +2,12 @@
 
 import { CVData } from "@/types/cv";
 
-import { fmtDate as fmt } from "@/lib/format";
+import { CV_LABELS, CvLang, fmtDate } from "@/lib/cvLabels";
 
-export default function MinimalTemplate({ data }: { data: CVData }) {
-  const { personal: p, experience, education, skills, languages, drivingLicenses } = data;
+export default function MinimalTemplate({ data, lang = "ro" }: { data: CVData; lang?: CvLang }) {
+  const { personal: p, experience, education, skills, languages, drivingLicenses, customSections } = data;
+  const L = CV_LABELS[lang];
+  const fmt = (d: string) => fmtDate(d, lang);
   const name = `${p.firstName} ${p.lastName}`.trim() || "Nume Prenume";
 
   const contactParts = [p.email, p.phone, p.location, p.website, p.linkedin].filter(Boolean);
@@ -37,7 +39,7 @@ export default function MinimalTemplate({ data }: { data: CVData }) {
 
       {experience.length > 0 && (
         <section className="mb-6">
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-3">Experiență</h2>
+          <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-3">{L.experienceShort}</h2>
           <div className="space-y-4">
             {experience.map(e => (
               <div key={e.id}>
@@ -50,7 +52,7 @@ export default function MinimalTemplate({ data }: { data: CVData }) {
                         {pos.description && <p className="mt-1 text-[10.5px] text-zinc-600 leading-relaxed">{pos.description}</p>}
                       </div>
                       <p className="text-[10px] text-zinc-400 whitespace-nowrap pt-0.5 text-right">
-                        {fmt(pos.startDate)}<br/>{pos.current ? "Prezent" : fmt(pos.endDate)}
+                        {fmt(pos.startDate)}<br/>{pos.current ? L.present : fmt(pos.endDate)}
                       </p>
                     </div>
                   ))}
@@ -63,7 +65,7 @@ export default function MinimalTemplate({ data }: { data: CVData }) {
 
       {education.length > 0 && (
         <section className="mb-6">
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-3">Educație</h2>
+          <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-3">{L.education}</h2>
           <div className="space-y-3">
             {education.map(e => (
               <div key={e.id} className="grid grid-cols-[1fr_auto] gap-x-6">
@@ -84,7 +86,7 @@ export default function MinimalTemplate({ data }: { data: CVData }) {
 
       {(skills.length > 0 || languages.length > 0) && (
         <section>
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-3">Competențe & Limbi</h2>
+          <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-3">{L.skillsAndLangs}</h2>
           <div className="flex flex-wrap gap-x-8 gap-y-1">
             {skills.map(s => (
               <span key={s.id} className="text-[11px] text-zinc-700">
@@ -100,13 +102,30 @@ export default function MinimalTemplate({ data }: { data: CVData }) {
         </section>
       )}
 
+      {customSections.filter(cs => cs.title && cs.items.length > 0).map(cs => (
+        <section key={cs.id} className="mt-6">
+          <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-3">{cs.title}</h2>
+          <div className="space-y-3">
+            {cs.items.map(it => (
+              <div key={it.id} className="grid grid-cols-[1fr_auto] gap-x-6">
+                <div>
+                  <p className="font-medium text-[11px] text-zinc-700">{it.name}{it.subtitle && <span className="text-zinc-500">, {it.subtitle}</span>}</p>
+                  {it.description && <p className="mt-1 text-[10.5px] text-zinc-600 leading-relaxed">{it.description}</p>}
+                </div>
+                {it.date && <p className="text-[10px] text-zinc-400 whitespace-nowrap pt-0.5 text-right">{it.date}</p>}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+
       {drivingLicenses.length > 0 && (
         <section className="mt-6">
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-3">Permis de conducere</h2>
+          <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-3">{L.driving}</h2>
           <div className="flex flex-wrap gap-x-8 gap-y-1">
             {drivingLicenses.map(d => (
               <span key={d.id} className="text-[11px] text-zinc-700">
-                Categoria {d.category}{d.year && <span className="text-zinc-400"> — {d.year}</span>}
+                {L.category} {d.category}{d.year && <span className="text-zinc-400"> — {d.year}</span>}
               </span>
             ))}
           </div>

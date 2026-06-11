@@ -3,7 +3,7 @@
 import { CVData } from "@/types/cv";
 import { EnvelopeSimple as Mail, Phone, MapPin, Globe, LinkSimple as Link2 } from "@phosphor-icons/react";
 
-import { fmtDate as fmt } from "@/lib/format";
+import { CV_LABELS, CvLang, fmtDate } from "@/lib/cvLabels";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -17,8 +17,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export default function CreativeTemplate({ data }: { data: CVData }) {
-  const { personal: p, experience, education, skills, languages, drivingLicenses } = data;
+export default function CreativeTemplate({ data, lang = "ro" }: { data: CVData; lang?: CvLang }) {
+  const { personal: p, experience, education, skills, languages, drivingLicenses, customSections } = data;
+  const L = CV_LABELS[lang];
+  const fmt = (d: string) => fmtDate(d, lang);
 
   return (
     <div
@@ -66,7 +68,7 @@ export default function CreativeTemplate({ data }: { data: CVData }) {
         )}
 
         {experience.length > 0 && (
-          <Section title="Experiență profesională">
+          <Section title={L.experience}>
             <div className="space-y-4">
               {experience.map((e) => (
                 <div key={e.id} className="relative pl-4">
@@ -78,7 +80,7 @@ export default function CreativeTemplate({ data }: { data: CVData }) {
                         <div className="flex justify-between items-baseline">
                           <span className="font-bold text-[11px] text-zinc-900">{pos.title}</span>
                           <span className="text-[9.5px] text-zinc-400 bg-zinc-50 px-1.5 py-0.5 rounded whitespace-nowrap ml-3">
-                            {fmt(pos.startDate)} – {pos.current ? "Prezent" : fmt(pos.endDate)}
+                            {fmt(pos.startDate)} – {pos.current ? L.present : fmt(pos.endDate)}
                           </span>
                         </div>
                         {pos.description && <p className="text-[10.5px] text-zinc-600 mt-0.5 leading-relaxed">{pos.description}</p>}
@@ -92,7 +94,7 @@ export default function CreativeTemplate({ data }: { data: CVData }) {
         )}
 
         {education.length > 0 && (
-          <Section title="Educație">
+          <Section title={L.education}>
             <div className="space-y-2.5">
               {education.map(e => (
                 <div key={e.id} className="flex justify-between items-start bg-zinc-50 rounded-lg px-3 py-2">
@@ -114,7 +116,7 @@ export default function CreativeTemplate({ data }: { data: CVData }) {
         {(skills.length > 0 || languages.length > 0) && (
           <div className="grid grid-cols-2 gap-6">
             {skills.length > 0 && (
-              <Section title="Competențe">
+              <Section title={L.skills}>
                 <div className="flex flex-wrap gap-1.5">
                   {skills.map(s => (
                     <span
@@ -129,7 +131,7 @@ export default function CreativeTemplate({ data }: { data: CVData }) {
               </Section>
             )}
             {languages.length > 0 && (
-              <Section title="Limbi străine">
+              <Section title={L.languages}>
                 <div className="space-y-1">
                   {languages.map(l => (
                     <div key={l.id} className="flex items-center justify-between text-[11px]">
@@ -143,16 +145,35 @@ export default function CreativeTemplate({ data }: { data: CVData }) {
           </div>
         )}
 
+        {customSections.filter(cs => cs.title && cs.items.length > 0).map(cs => (
+          <div key={cs.id} className="mt-5">
+            <Section title={cs.title}>
+              <div className="space-y-2.5">
+                {cs.items.map(it => (
+                  <div key={it.id} className="relative pl-4">
+                    <div className="absolute left-0 top-[5px] w-1.5 h-1.5 rounded-full bg-sky-400" />
+                    <div className="flex justify-between items-baseline">
+                      <span className="font-bold text-[11px] text-zinc-900">{it.name}{it.subtitle && <span className="font-normal text-sky-600"> · {it.subtitle}</span>}</span>
+                      {it.date && <span className="text-[9.5px] text-zinc-400 bg-zinc-50 px-1.5 py-0.5 rounded whitespace-nowrap ml-3">{it.date}</span>}
+                    </div>
+                    {it.description && <p className="text-[10.5px] text-zinc-600 mt-0.5 leading-relaxed">{it.description}</p>}
+                  </div>
+                ))}
+              </div>
+            </Section>
+          </div>
+        ))}
+
         {drivingLicenses.length > 0 && (
           <div className="mt-5">
-            <Section title="Permis de conducere">
+            <Section title={L.driving}>
               <div className="flex flex-wrap gap-1.5">
                 {drivingLicenses.map(d => (
                   <span
                     key={d.id}
                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-50 text-sky-700 border border-sky-100"
                   >
-                    Categoria {d.category}
+                    {L.category} {d.category}
                     {d.year && <span className="text-sky-400 text-[9px]">{d.year}</span>}
                   </span>
                 ))}

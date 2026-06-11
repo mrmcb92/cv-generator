@@ -60,6 +60,21 @@ export interface DrivingLicense {
   year: string;
 }
 
+export interface CustomItem {
+  id: string;
+  name: string;
+  subtitle: string;
+  date: string;
+  description: string;
+}
+
+/** User-defined CV section (certifications, projects, volunteering...) */
+export interface CustomSection {
+  id: string;
+  title: string;
+  items: CustomItem[];
+}
+
 export interface CVData {
   personal: PersonalInfo;
   experience: WorkExperience[];
@@ -67,6 +82,7 @@ export interface CVData {
   skills: Skill[];
   languages: Language[];
   drivingLicenses: DrivingLicense[];
+  customSections: CustomSection[];
 }
 
 export const defaultCV: CVData = {
@@ -85,4 +101,5 @@ export const defaultCV: CVData = {
   skills: [],
   languages: [],
   drivingLicenses: [],
+  customSections: [],
 };

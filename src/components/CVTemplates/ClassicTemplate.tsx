@@ -3,11 +3,13 @@
 import { CVData } from "@/types/cv";
 import { EnvelopeSimple as Mail, Phone, MapPin, Globe, LinkSimple as Link2 } from "@phosphor-icons/react";
 
-import { fmtDate as fmt } from "@/lib/format";
+import { CV_LABELS, CvLang, fmtDate } from "@/lib/cvLabels";
 
-export default function ClassicTemplate({ data }: { data: CVData }) {
-  const { personal: p, experience, education, skills, languages, drivingLicenses } = data;
+export default function ClassicTemplate({ data, lang = "ro" }: { data: CVData; lang?: CvLang }) {
+  const { personal: p, experience, education, skills, languages, drivingLicenses, customSections } = data;
   const name = `${p.firstName} ${p.lastName}`.trim() || "Nume Prenume";
+  const L = CV_LABELS[lang];
+  const fmt = (d: string) => fmtDate(d, lang);
 
   return (
     <div
@@ -36,14 +38,14 @@ export default function ClassicTemplate({ data }: { data: CVData }) {
       <div className="px-8 py-6 space-y-5">
         {p.summary && (
           <section>
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-2">Profil</h2>
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-2">{L.profile}</h2>
             <p className="text-[11px] text-gray-700 leading-relaxed">{p.summary}</p>
           </section>
         )}
 
         {experience.length > 0 && (
           <section>
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-3">Experiență profesională</h2>
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-3">{L.experience}</h2>
             <div className="space-y-4">
               {experience.map(e => (
                 <div key={e.id}>
@@ -54,7 +56,7 @@ export default function ClassicTemplate({ data }: { data: CVData }) {
                         <div className="flex justify-between items-baseline">
                           <span className="font-semibold text-[11px]">{pos.title}</span>
                           <span className="text-[10px] text-slate-400 whitespace-nowrap ml-4">
-                            {fmt(pos.startDate)} – {pos.current ? "Prezent" : fmt(pos.endDate)}
+                            {fmt(pos.startDate)} – {pos.current ? L.present : fmt(pos.endDate)}
                           </span>
                         </div>
                         {pos.description && <p className="text-[10.5px] text-gray-600 mt-0.5 leading-relaxed">{pos.description}</p>}
@@ -69,12 +71,12 @@ export default function ClassicTemplate({ data }: { data: CVData }) {
 
         {education.length > 0 && (
           <section>
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-3">Educație</h2>
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-3">{L.education}</h2>
             <div className="space-y-2.5">
               {education.map(e => (
                 <div key={e.id} className="flex justify-between items-baseline">
                   <div>
-                    <span className="font-semibold text-[11px]">{e.degree}{e.field && ` în ${e.field}`}</span>
+                    <span className="font-semibold text-[11px]">{e.degree}{e.field && ` ${L.inWord} ${e.field}`}</span>
                     {e.institution && <span className="text-slate-500 text-[11px] ml-1.5">· {e.institution}</span>}
                   </div>
                   <span className="text-[10px] text-slate-400 whitespace-nowrap ml-4">
@@ -90,7 +92,7 @@ export default function ClassicTemplate({ data }: { data: CVData }) {
           <div className="grid grid-cols-2 gap-6">
             {skills.length > 0 && (
               <section>
-                <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-2">Competențe</h2>
+                <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-2">{L.skills}</h2>
                 <div className="space-y-1">
                   {skills.map(s => (
                     <div key={s.id} className="flex justify-between text-[11px]">
@@ -103,7 +105,7 @@ export default function ClassicTemplate({ data }: { data: CVData }) {
             )}
             {languages.length > 0 && (
               <section>
-                <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-2">Limbi străine</h2>
+                <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-2">{L.languages}</h2>
                 <div className="space-y-1">
                   {languages.map(l => (
                     <div key={l.id} className="flex justify-between text-[11px]">
@@ -117,13 +119,33 @@ export default function ClassicTemplate({ data }: { data: CVData }) {
           </div>
         )}
 
+        {customSections.filter(cs => cs.title && cs.items.length > 0).map(cs => (
+          <section key={cs.id}>
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-3">{cs.title}</h2>
+            <div className="space-y-2.5">
+              {cs.items.map(it => (
+                <div key={it.id}>
+                  <div className="flex justify-between items-baseline">
+                    <div>
+                      <span className="font-semibold text-[11px]">{it.name}</span>
+                      {it.subtitle && <span className="text-slate-500 text-[11px] ml-1.5">· {it.subtitle}</span>}
+                    </div>
+                    {it.date && <span className="text-[10px] text-slate-400 whitespace-nowrap ml-4">{it.date}</span>}
+                  </div>
+                  {it.description && <p className="text-[10.5px] text-gray-600 mt-0.5 leading-relaxed">{it.description}</p>}
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+
         {drivingLicenses.length > 0 && (
           <section>
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-2">Permis de conducere</h2>
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-2">{L.driving}</h2>
             <div className="flex flex-wrap gap-x-5 gap-y-1">
               {drivingLicenses.map(d => (
                 <span key={d.id} className="text-[11px]">
-                  <span className="font-semibold">Categoria {d.category}</span>
+                  <span className="font-semibold">{L.category} {d.category}</span>
                   {d.year && <span className="text-slate-400"> · {d.year}</span>}
                 </span>
               ))}

@@ -15,7 +15,7 @@ import {
 import { saveAs } from "file-saver";
 import { CVData } from "@/types/cv";
 
-import { fmtDate as formatDate } from "@/lib/format";
+import { CV_LABELS, CvLang, fmtDate } from "@/lib/cvLabels";
 
 function sectionHeading(text: string): Paragraph {
   return new Paragraph({
@@ -28,8 +28,10 @@ function sectionHeading(text: string): Paragraph {
   });
 }
 
-export async function exportToDocx(data: CVData) {
-  const { personal, experience, education, skills, languages, drivingLicenses } = data;
+export async function exportToDocx(data: CVData, lang: CvLang = "ro") {
+  const { personal, experience, education, skills, languages, drivingLicenses, customSections } = data;
+  const L = CV_LABELS[lang];
+  const formatDate = (d: string) => fmtDate(d, lang);
   const fullName = `${personal.firstName} ${personal.lastName}`.trim();
 
   const children: (Paragraph | Table)[] = [];
@@ -84,7 +86,7 @@ export async function exportToDocx(data: CVData) {
 
   // Summary
   if (personal.summary) {
-    children.push(sectionHeading("Profil"));
+    children.push(sectionHeading(L.profile));
     children.push(
       new Paragraph({ text: personal.summary, spacing: { after: 100 } })
     );
@@ -92,7 +94,7 @@ export async function exportToDocx(data: CVData) {
 
   // Experience
   if (experience.length > 0) {
-    children.push(sectionHeading("Experiență profesională"));
+    children.push(sectionHeading(L.experience));
     for (const exp of experience) {
       if (exp.company) {
         children.push(
@@ -108,7 +110,7 @@ export async function exportToDocx(data: CVData) {
             children: [
               new TextRun({ text: pos.title, bold: true }),
               new TextRun({
-                text: `  ${formatDate(pos.startDate)} – ${pos.current ? "Prezent" : formatDate(pos.endDate)}`,
+                text: `  ${formatDate(pos.startDate)} – ${pos.current ? L.present : formatDate(pos.endDate)}`,
                 color: "9CA3AF",
               }),
             ],
@@ -127,12 +129,12 @@ export async function exportToDocx(data: CVData) {
 
   // Education
   if (education.length > 0) {
-    children.push(sectionHeading("Educație"));
+    children.push(sectionHeading(L.education));
     for (const edu of education) {
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: `${edu.degree}${edu.field ? ` în ${edu.field}` : ""}`, bold: true }),
+            new TextRun({ text: `${edu.degree}${edu.field ? ` ${L.inWord} ${edu.field}` : ""}`, bold: true }),
             new TextRun({ text: `  |  ${edu.institution}`, color: "6B7280" }),
             new TextRun({
               text: `  ${formatDate(edu.startDate)} – ${formatDate(edu.endDate)}`,
@@ -176,12 +178,12 @@ export async function exportToDocx(data: CVData) {
       new TableRow({
         children: [
           new TableCell({
-            children: [sectionHeading("Competențe")],
+            children: [sectionHeading(L.skills)],
             width: { size: 50, type: WidthType.PERCENTAGE },
             borders: { top: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
           }),
           new TableCell({
-            children: [sectionHeading("Limbi străine")],
+            children: [sectionHeading(L.languages)],
             width: { size: 50, type: WidthType.PERCENTAGE },
             borders: { top: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
           }),
@@ -215,14 +217,35 @@ export async function exportToDocx(data: CVData) {
     );
   }
 
+  // Custom sections
+  for (const cs of customSections ?? []) {
+    if (!cs.title || cs.items.length === 0) continue;
+    children.push(sectionHeading(cs.title));
+    for (const it of cs.items) {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: it.name, bold: true }),
+            ...(it.subtitle ? [new TextRun({ text: `  |  ${it.subtitle}`, color: "6B7280" })] : []),
+            ...(it.date ? [new TextRun({ text: `  ${it.date}`, color: "9CA3AF" })] : []),
+          ],
+          spacing: { before: 120, after: 30 },
+        })
+      );
+      if (it.description) {
+        children.push(new Paragraph({ text: it.description, spacing: { after: 60 } }));
+      }
+    }
+  }
+
   // Driving licenses
   if (drivingLicenses?.length > 0) {
-    children.push(sectionHeading("Permis de conducere"));
+    children.push(sectionHeading(L.driving));
     children.push(
       new Paragraph({
         children: drivingLicenses.flatMap((d, i) => [
           ...(i > 0 ? [new TextRun({ text: "   |   ", color: "D1D5DB" })] : []),
-          new TextRun({ text: `Categoria ${d.category}`, bold: true }),
+          new TextRun({ text: `${L.category} ${d.category}`, bold: true }),
           ...(d.year ? [new TextRun({ text: ` – ${d.year}`, color: "9CA3AF" })] : []),
         ]),
         spacing: { before: 100, after: 40 },

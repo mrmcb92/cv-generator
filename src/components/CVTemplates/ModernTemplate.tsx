@@ -3,7 +3,7 @@
 import { CVData } from "@/types/cv";
 import { EnvelopeSimple as Mail, Phone, MapPin, Globe, LinkSimple as Link2 } from "@phosphor-icons/react";
 
-import { fmtDate as fmt } from "@/lib/format";
+import { CV_LABELS, CvLang, fmtDate } from "@/lib/cvLabels";
 
 function SideLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -17,8 +17,10 @@ function BodyLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function ModernTemplate({ data }: { data: CVData }) {
-  const { personal: p, experience, education, skills, languages, drivingLicenses } = data;
+export default function ModernTemplate({ data, lang = "ro" }: { data: CVData; lang?: CvLang }) {
+  const { personal: p, experience, education, skills, languages, drivingLicenses, customSections } = data;
+  const L = CV_LABELS[lang];
+  const fmt = (d: string) => fmtDate(d, lang);
 
   return (
     <div
@@ -56,7 +58,7 @@ export default function ModernTemplate({ data }: { data: CVData }) {
         {/* Skills */}
         {skills.length > 0 && (
           <>
-            <SideLabel>Competențe</SideLabel>
+            <SideLabel>{L.skills}</SideLabel>
             <div className="space-y-1.5">
               {skills.map(s => (
                 <div key={s.id}>
@@ -80,7 +82,7 @@ export default function ModernTemplate({ data }: { data: CVData }) {
         {/* Languages */}
         {languages.length > 0 && (
           <>
-            <SideLabel>Limbi străine</SideLabel>
+            <SideLabel>{L.languages}</SideLabel>
             <div className="space-y-1">
               {languages.map(l => (
                 <div key={l.id} className="flex justify-between text-[10px] text-slate-300">
@@ -95,11 +97,11 @@ export default function ModernTemplate({ data }: { data: CVData }) {
         {/* Driving licenses */}
         {drivingLicenses.length > 0 && (
           <>
-            <SideLabel>Permis de conducere</SideLabel>
+            <SideLabel>{L.driving}</SideLabel>
             <div className="space-y-1">
               {drivingLicenses.map(d => (
                 <div key={d.id} className="flex justify-between text-[10px] text-slate-300">
-                  <span>Categoria {d.category}</span>
+                  <span>{L.category} {d.category}</span>
                   {d.year && <span className="text-sky-400 font-semibold text-[9px]">{d.year}</span>}
                 </div>
               ))}
@@ -112,14 +114,14 @@ export default function ModernTemplate({ data }: { data: CVData }) {
       <div className="flex-1 px-6 py-7 space-y-5" style={{ backgroundColor: "#f1f5f9" }}>
         {p.summary && (
           <section>
-            <BodyLabel>Profil profesional</BodyLabel>
+            <BodyLabel>{L.profileLong}</BodyLabel>
             <p className="text-[11px] text-gray-600 leading-relaxed">{p.summary}</p>
           </section>
         )}
 
         {experience.length > 0 && (
           <section>
-            <BodyLabel>Experiență profesională</BodyLabel>
+            <BodyLabel>{L.experience}</BodyLabel>
             <div className="space-y-4">
               {experience.map(e => (
                 <div key={e.id}>
@@ -130,7 +132,7 @@ export default function ModernTemplate({ data }: { data: CVData }) {
                         <div className="flex justify-between items-baseline">
                           <span className="font-semibold text-[11px] text-slate-700">{pos.title}</span>
                           <span className="text-[10px] text-slate-400 whitespace-nowrap ml-3">
-                            {fmt(pos.startDate)} – {pos.current ? "Prezent" : fmt(pos.endDate)}
+                            {fmt(pos.startDate)} – {pos.current ? L.present : fmt(pos.endDate)}
                           </span>
                         </div>
                         {pos.description && <p className="text-[10.5px] text-gray-600 mt-0.5 leading-relaxed">{pos.description}</p>}
@@ -145,7 +147,7 @@ export default function ModernTemplate({ data }: { data: CVData }) {
 
         {education.length > 0 && (
           <section>
-            <BodyLabel>Educație</BodyLabel>
+            <BodyLabel>{L.education}</BodyLabel>
             <div className="space-y-3">
               {education.map(e => (
                 <div key={e.id} className="relative pl-3 border-l-2 border-sky-100">
@@ -163,6 +165,24 @@ export default function ModernTemplate({ data }: { data: CVData }) {
             </div>
           </section>
         )}
+
+        {customSections.filter(cs => cs.title && cs.items.length > 0).map(cs => (
+          <section key={cs.id}>
+            <BodyLabel>{cs.title}</BodyLabel>
+            <div className="space-y-2.5">
+              {cs.items.map(it => (
+                <div key={it.id} className="relative pl-3 border-l-2 border-sky-100">
+                  <div className="flex justify-between items-baseline">
+                    <span className="font-bold text-[11px] text-slate-800">{it.name}</span>
+                    {it.date && <span className="text-[10px] text-slate-400 whitespace-nowrap ml-3">{it.date}</span>}
+                  </div>
+                  {it.subtitle && <p className="text-[10.5px] text-sky-600 font-medium">{it.subtitle}</p>}
+                  {it.description && <p className="text-[10.5px] text-gray-600 mt-0.5 leading-relaxed">{it.description}</p>}
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
     </div>
   );

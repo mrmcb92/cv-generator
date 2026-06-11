@@ -24,7 +24,7 @@ Font.register({
 });
 
 // ─── Shared helpers ───────────────────────────────────────────────
-import { fmtDate } from "@/lib/format";
+import { CV_LABELS, CvLang, fmtDate as fmtDateL } from "@/lib/cvLabels";
 
 const LEVEL_W: Record<string, string> = {
   Expert: "100%", Avansat: "75%", Mediu: "50%", "Începător": "25%",
@@ -58,8 +58,10 @@ const classicS = StyleSheet.create({
   skillLevel:  { color: "#94a3b8", fontSize: 10 },
 });
 
-function ClassicPdf({ data }: { data: CVData }) {
-  const { personal: p, experience, education, skills, languages, drivingLicenses } = data;
+function ClassicPdf({ data, lang }: { data: CVData; lang: CvLang }) {
+  const { personal: p, experience, education, skills, languages, drivingLicenses, customSections } = data;
+  const L = CV_LABELS[lang];
+  const fmtDate = (d: string) => fmtDateL(d, lang);
   return (
     <Document>
       <Page size="A4" style={classicS.page}>
@@ -84,13 +86,13 @@ function ClassicPdf({ data }: { data: CVData }) {
         <View style={classicS.body}>
           {p.summary && (
             <View style={classicS.section}>
-              <Text style={classicS.secTitle}>Profil</Text>
+              <Text style={classicS.secTitle}>{L.profile}</Text>
               <Text style={classicS.summaryText}>{p.summary}</Text>
             </View>
           )}
           {experience.length > 0 && (
             <View style={classicS.section}>
-              <Text style={classicS.secTitle}>Experiență profesională</Text>
+              <Text style={classicS.secTitle}>{L.experience}</Text>
               {experience.map(e => (
                 <View key={e.id} style={{ marginBottom: 10 }}>
                   {e.company && <Text style={[classicS.expTitle, { marginBottom: 4 }]}>{e.company}</Text>}
@@ -99,7 +101,7 @@ function ClassicPdf({ data }: { data: CVData }) {
                       <View style={classicS.expRow}>
                         <Text style={[classicS.expTitle, { fontWeight: "normal" }]}>{pos.title}</Text>
                         <Text style={classicS.expDate}>
-                          {fmtDate(pos.startDate)} – {pos.current ? "Prezent" : fmtDate(pos.endDate)}
+                          {fmtDate(pos.startDate)} – {pos.current ? L.present : fmtDate(pos.endDate)}
                         </Text>
                       </View>
                       {pos.description && <Text style={classicS.expDesc}>{pos.description}</Text>}
@@ -111,12 +113,12 @@ function ClassicPdf({ data }: { data: CVData }) {
           )}
           {education.length > 0 && (
             <View style={classicS.section}>
-              <Text style={classicS.secTitle}>Educație</Text>
+              <Text style={classicS.secTitle}>{L.education}</Text>
               {education.map(e => (
                 <View key={e.id} style={[classicS.expItem, { marginBottom: 6 }]}>
                   <View style={classicS.expRow}>
                     <Text style={classicS.expTitle}>
-                      {e.degree}{e.field ? ` în ${e.field}` : ""}{e.institution ? `  ·  ${e.institution}` : ""}
+                      {e.degree}{e.field ? ` ${L.inWord} ${e.field}` : ""}{e.institution ? `  ·  ${e.institution}` : ""}
                     </Text>
                     <Text style={classicS.expDate}>
                       {fmtDate(e.startDate)} – {fmtDate(e.endDate)}
@@ -130,7 +132,7 @@ function ClassicPdf({ data }: { data: CVData }) {
             <View style={[classicS.section, classicS.twoCol]}>
               {skills.length > 0 && (
                 <View style={classicS.col}>
-                  <Text style={classicS.secTitle}>Competențe</Text>
+                  <Text style={classicS.secTitle}>{L.skills}</Text>
                   {skills.map(s => (
                     <View key={s.id} style={classicS.skillRow}>
                       <Text>{s.name}</Text>
@@ -141,7 +143,7 @@ function ClassicPdf({ data }: { data: CVData }) {
               )}
               {languages.length > 0 && (
                 <View style={classicS.col}>
-                  <Text style={classicS.secTitle}>Limbi străine</Text>
+                  <Text style={classicS.secTitle}>{L.languages}</Text>
                   {languages.map(l => (
                     <View key={l.id} style={classicS.skillRow}>
                       <Text>{l.name}</Text>
@@ -152,13 +154,29 @@ function ClassicPdf({ data }: { data: CVData }) {
               )}
             </View>
           )}
+          {customSections.filter(cs => cs.title && cs.items.length > 0).map(cs => (
+            <View key={cs.id} style={classicS.section}>
+              <Text style={classicS.secTitle}>{cs.title}</Text>
+              {cs.items.map(it => (
+                <View key={it.id} style={{ marginBottom: 6 }}>
+                  <View style={classicS.expRow}>
+                    <Text style={classicS.expTitle}>
+                      {it.name}{it.subtitle ? `  ·  ${it.subtitle}` : ""}
+                    </Text>
+                    {it.date ? <Text style={classicS.expDate}>{it.date}</Text> : null}
+                  </View>
+                  {it.description ? <Text style={classicS.expDesc}>{it.description}</Text> : null}
+                </View>
+              ))}
+            </View>
+          ))}
           {drivingLicenses?.length > 0 && (
             <View style={classicS.section}>
-              <Text style={classicS.secTitle}>Permis de conducere</Text>
+              <Text style={classicS.secTitle}>{L.driving}</Text>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: "0 20" }}>
                 {drivingLicenses.map(d => (
                   <Text key={d.id} style={{ fontSize: 11, color: "#1e293b", marginBottom: 3 }}>
-                    Categoria {d.category}{d.year ? <Text style={{ color: "#94a3b8", fontSize: 10 }}> · {d.year}</Text> : null}
+                    {L.category} {d.category}{d.year ? <Text style={{ color: "#94a3b8", fontSize: 10 }}> · {d.year}</Text> : null}
                   </Text>
                 ))}
               </View>
@@ -203,8 +221,10 @@ const modernS = StyleSheet.create({
   expDesc:   { fontSize: 10, color: "#475569", marginTop: 2, lineHeight: 1.5 },
 });
 
-function ModernPdf({ data }: { data: CVData }) {
-  const { personal: p, experience, education, skills, languages, drivingLicenses } = data;
+function ModernPdf({ data, lang }: { data: CVData; lang: CvLang }) {
+  const { personal: p, experience, education, skills, languages, drivingLicenses, customSections } = data;
+  const L = CV_LABELS[lang];
+  const fmtDate = (d: string) => fmtDateL(d, lang);
   return (
     <Document>
       <Page size="A4" style={modernS.page}>
@@ -223,7 +243,7 @@ function ModernPdf({ data }: { data: CVData }) {
           {p.linkedin && <Text style={modernS.contactItem}>{p.linkedin}</Text>}
           {skills.length > 0 && (
             <View>
-              <Text style={modernS.sideSecTitle}>Competențe</Text>
+              <Text style={modernS.sideSecTitle}>{L.skills}</Text>
               {skills.map(s => (
                 <View key={s.id}>
                   <Text style={modernS.skillName}>{s.name}</Text>
@@ -239,7 +259,7 @@ function ModernPdf({ data }: { data: CVData }) {
           )}
           {languages.length > 0 && (
             <View>
-              <Text style={modernS.sideSecTitle}>Limbi străine</Text>
+              <Text style={modernS.sideSecTitle}>{L.languages}</Text>
               {languages.map(l => (
                 <View key={l.id} style={modernS.langRow}>
                   <Text style={modernS.langName}>{l.name}</Text>
@@ -250,10 +270,10 @@ function ModernPdf({ data }: { data: CVData }) {
           )}
           {drivingLicenses?.length > 0 && (
             <View>
-              <Text style={modernS.sideSecTitle}>Permis de conducere</Text>
+              <Text style={modernS.sideSecTitle}>{L.driving}</Text>
               {drivingLicenses.map(d => (
                 <View key={d.id} style={modernS.langRow}>
-                  <Text style={modernS.langName}>Categoria {d.category}</Text>
+                  <Text style={modernS.langName}>{L.category} {d.category}</Text>
                   {d.year ? <Text style={modernS.langLvl}>{d.year}</Text> : null}
                 </View>
               ))}
@@ -263,13 +283,13 @@ function ModernPdf({ data }: { data: CVData }) {
         <View style={modernS.content}>
           {p.summary && (
             <View style={modernS.section}>
-              <Text style={modernS.secTitle}>Profil profesional</Text>
+              <Text style={modernS.secTitle}>{L.profileLong}</Text>
               <Text style={modernS.summaryTxt}>{p.summary}</Text>
             </View>
           )}
           {experience.length > 0 && (
             <View style={modernS.section}>
-              <Text style={modernS.secTitle}>Experiență profesională</Text>
+              <Text style={modernS.secTitle}>{L.experience}</Text>
               {experience.map(e => (
                 <View key={e.id} style={{ marginBottom: 10 }}>
                   {e.company && <Text style={[modernS.expComp, { marginBottom: 4 }]}>{e.company}</Text>}
@@ -278,7 +298,7 @@ function ModernPdf({ data }: { data: CVData }) {
                       <View style={modernS.expRow}>
                         <Text style={modernS.expTitle}>{pos.title}</Text>
                         <Text style={modernS.expDate}>
-                          {fmtDate(pos.startDate)} – {pos.current ? "Prezent" : fmtDate(pos.endDate)}
+                          {fmtDate(pos.startDate)} – {pos.current ? L.present : fmtDate(pos.endDate)}
                         </Text>
                       </View>
                       {pos.description && <Text style={modernS.expDesc}>{pos.description}</Text>}
@@ -290,7 +310,7 @@ function ModernPdf({ data }: { data: CVData }) {
           )}
           {education.length > 0 && (
             <View style={modernS.section}>
-              <Text style={modernS.secTitle}>Educație</Text>
+              <Text style={modernS.secTitle}>{L.education}</Text>
               {education.map(e => (
                 <View key={e.id} style={modernS.expItem}>
                   <View style={modernS.expRow}>
@@ -306,6 +326,21 @@ function ModernPdf({ data }: { data: CVData }) {
               ))}
             </View>
           )}
+          {customSections.filter(cs => cs.title && cs.items.length > 0).map(cs => (
+            <View key={cs.id} style={modernS.section}>
+              <Text style={modernS.secTitle}>{cs.title}</Text>
+              {cs.items.map(it => (
+                <View key={it.id} style={modernS.expItem}>
+                  <View style={modernS.expRow}>
+                    <Text style={modernS.expTitle}>{it.name}</Text>
+                    {it.date ? <Text style={modernS.expDate}>{it.date}</Text> : null}
+                  </View>
+                  {it.subtitle ? <Text style={[modernS.expComp, { fontSize: 10 }]}>{it.subtitle}</Text> : null}
+                  {it.description ? <Text style={modernS.expDesc}>{it.description}</Text> : null}
+                </View>
+              ))}
+            </View>
+          ))}
         </View>
       </Page>
     </Document>
@@ -337,8 +372,10 @@ const minimalS = StyleSheet.create({
   skillMuted:  { color: "#a1a1aa" },
 });
 
-function MinimalPdf({ data }: { data: CVData }) {
-  const { personal: p, experience, education, skills, languages, drivingLicenses } = data;
+function MinimalPdf({ data, lang }: { data: CVData; lang: CvLang }) {
+  const { personal: p, experience, education, skills, languages, drivingLicenses, customSections } = data;
+  const L = CV_LABELS[lang];
+  const fmtDate = (d: string) => fmtDateL(d, lang);
   const name = `${p.firstName} ${p.lastName}`.trim() || "Nume Prenume";
   const contactParts = [p.email, p.phone, p.location, p.website, p.linkedin].filter(Boolean);
   return (
@@ -354,7 +391,7 @@ function MinimalPdf({ data }: { data: CVData }) {
         )}
         {experience.length > 0 && (
           <View style={minimalS.section}>
-            <Text style={minimalS.secTitle}>Experiență</Text>
+            <Text style={minimalS.secTitle}>{L.experienceShort}</Text>
             {experience.map(e => (
               <View key={e.id} style={{ marginBottom: 10 }}>
                 {e.company && <Text style={[minimalS.expTitle, { marginBottom: 4 }]}>{e.company}</Text>}
@@ -366,7 +403,7 @@ function MinimalPdf({ data }: { data: CVData }) {
                     </View>
                     <View>
                       <Text style={minimalS.expDate}>{fmtDate(pos.startDate)}</Text>
-                      <Text style={minimalS.expDate}>{pos.current ? "Prezent" : fmtDate(pos.endDate)}</Text>
+                      <Text style={minimalS.expDate}>{pos.current ? L.present : fmtDate(pos.endDate)}</Text>
                     </View>
                   </View>
                 ))}
@@ -376,7 +413,7 @@ function MinimalPdf({ data }: { data: CVData }) {
         )}
         {education.length > 0 && (
           <View style={minimalS.section}>
-            <Text style={minimalS.secTitle}>Educație</Text>
+            <Text style={minimalS.secTitle}>{L.education}</Text>
             {education.map(e => (
               <View key={e.id} style={minimalS.expItem}>
                 <View style={minimalS.expLeft}>
@@ -395,7 +432,7 @@ function MinimalPdf({ data }: { data: CVData }) {
         )}
         {(skills.length > 0 || languages.length > 0) && (
           <View style={minimalS.section}>
-            <Text style={minimalS.secTitle}>Competențe & Limbi</Text>
+            <Text style={minimalS.secTitle}>{L.skillsAndLangs}</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: "0 32" }}>
               {[...skills.map(s => `${s.name} — ${s.level}`),
                 ...languages.map(l => `${l.name} — ${l.level}`)
@@ -405,13 +442,27 @@ function MinimalPdf({ data }: { data: CVData }) {
             </View>
           </View>
         )}
+        {customSections.filter(cs => cs.title && cs.items.length > 0).map(cs => (
+          <View key={cs.id} style={minimalS.section}>
+            <Text style={minimalS.secTitle}>{cs.title}</Text>
+            {cs.items.map(it => (
+              <View key={it.id} style={minimalS.expItem}>
+                <View style={minimalS.expLeft}>
+                  <Text style={minimalS.expTitle}>{it.name}{it.subtitle ? `, ${it.subtitle}` : ""}</Text>
+                  {it.description ? <Text style={minimalS.expDesc}>{it.description}</Text> : null}
+                </View>
+                {it.date ? <Text style={minimalS.expDate}>{it.date}</Text> : null}
+              </View>
+            ))}
+          </View>
+        ))}
         {drivingLicenses?.length > 0 && (
           <View style={minimalS.section}>
-            <Text style={minimalS.secTitle}>Permis de conducere</Text>
+            <Text style={minimalS.secTitle}>{L.driving}</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: "0 32" }}>
               {drivingLicenses.map(d => (
                 <Text key={d.id} style={minimalS.skillLine}>
-                  Categoria {d.category}{d.year ? ` — ${d.year}` : ""}
+                  {L.category} {d.category}{d.year ? ` — ${d.year}` : ""}
                 </Text>
               ))}
             </View>
@@ -468,8 +519,10 @@ const creativeS = StyleSheet.create({
                  backgroundColor: "#0ea5e9", paddingHorizontal: 5, paddingVertical: 2 },
 });
 
-function CreativePdf({ data }: { data: CVData }) {
-  const { personal: p, experience, education, skills, languages, drivingLicenses } = data;
+function CreativePdf({ data, lang }: { data: CVData; lang: CvLang }) {
+  const { personal: p, experience, education, skills, languages, drivingLicenses, customSections } = data;
+  const L = CV_LABELS[lang];
+  const fmtDate = (d: string) => fmtDateL(d, lang);
   return (
     <Document>
       <Page size="A4" style={creativeS.page}>
@@ -503,7 +556,7 @@ function CreativePdf({ data }: { data: CVData }) {
             <View style={creativeS.section}>
               <View style={creativeS.secHeader}>
                 <View style={creativeS.secAccent} />
-                <Text style={creativeS.secTitle}>Experiență profesională</Text>
+                <Text style={creativeS.secTitle}>{L.experience}</Text>
               </View>
               {experience.map(e => (
                 <View key={e.id} style={[creativeS.expItem, { marginBottom: 10 }]}>
@@ -514,7 +567,7 @@ function CreativePdf({ data }: { data: CVData }) {
                       <View style={creativeS.expRow}>
                         <Text style={creativeS.expTitle}>{pos.title}</Text>
                         <Text style={creativeS.expBadge}>
-                          {fmtDate(pos.startDate)} – {pos.current ? "Prezent" : fmtDate(pos.endDate)}
+                          {fmtDate(pos.startDate)} – {pos.current ? L.present : fmtDate(pos.endDate)}
                         </Text>
                       </View>
                       {pos.description && <Text style={creativeS.expDesc}>{pos.description}</Text>}
@@ -528,7 +581,7 @@ function CreativePdf({ data }: { data: CVData }) {
             <View style={creativeS.section}>
               <View style={creativeS.secHeader}>
                 <View style={creativeS.secAccent} />
-                <Text style={creativeS.secTitle}>Educație</Text>
+                <Text style={creativeS.secTitle}>{L.education}</Text>
               </View>
               {education.map(e => (
                 <View key={e.id} style={creativeS.eduItem}>
@@ -551,7 +604,7 @@ function CreativePdf({ data }: { data: CVData }) {
                 <View style={creativeS.col}>
                   <View style={creativeS.secHeader}>
                     <View style={creativeS.secAccent} />
-                    <Text style={creativeS.secTitle}>Competențe</Text>
+                    <Text style={creativeS.secTitle}>{L.skills}</Text>
                   </View>
                   <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
                     {skills.map(s => (
@@ -564,7 +617,7 @@ function CreativePdf({ data }: { data: CVData }) {
                 <View style={creativeS.col}>
                   <View style={creativeS.secHeader}>
                     <View style={creativeS.secAccent} />
-                    <Text style={creativeS.secTitle}>Limbi străine</Text>
+                    <Text style={creativeS.secTitle}>{L.languages}</Text>
                   </View>
                   {languages.map(l => (
                     <View key={l.id} style={creativeS.langRow}>
@@ -576,16 +629,33 @@ function CreativePdf({ data }: { data: CVData }) {
               )}
             </View>
           )}
+          {customSections.filter(cs => cs.title && cs.items.length > 0).map(cs => (
+            <View key={cs.id} style={creativeS.section}>
+              <View style={creativeS.secHeader}>
+                <View style={creativeS.secAccent} />
+                <Text style={creativeS.secTitle}>{cs.title}</Text>
+              </View>
+              {cs.items.map(it => (
+                <View key={it.id} style={{ marginBottom: 8, paddingLeft: 12 }}>
+                  <View style={creativeS.expRow}>
+                    <Text style={creativeS.expTitle}>{it.name}{it.subtitle ? ` · ${it.subtitle}` : ""}</Text>
+                    {it.date ? <Text style={creativeS.expBadge}>{it.date}</Text> : null}
+                  </View>
+                  {it.description ? <Text style={creativeS.expDesc}>{it.description}</Text> : null}
+                </View>
+              ))}
+            </View>
+          ))}
           {drivingLicenses?.length > 0 && (
             <View style={creativeS.section}>
               <View style={creativeS.secHeader}>
                 <View style={creativeS.secAccent} />
-                <Text style={creativeS.secTitle}>Permis de conducere</Text>
+                <Text style={creativeS.secTitle}>{L.driving}</Text>
               </View>
               <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
                 {drivingLicenses.map(d => (
                   <Text key={d.id} style={creativeS.skillPill}>
-                    Categoria {d.category}{d.year ? ` · ${d.year}` : ""}
+                    {L.category} {d.category}{d.year ? ` · ${d.year}` : ""}
                   </Text>
                 ))}
               </View>
@@ -602,14 +672,15 @@ export async function exportToPdf(
   lastName: string,
   data: CVData,
   templateId: TemplateId = "classic",
+  lang: CvLang = "ro",
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let doc: React.ReactElement<any>;
   switch (templateId) {
-    case "modern":   doc = <ModernPdf   data={data} />; break;
-    case "minimal":  doc = <MinimalPdf  data={data} />; break;
-    case "creative": doc = <CreativePdf data={data} />; break;
-    default:         doc = <ClassicPdf  data={data} />; break;
+    case "modern":   doc = <ModernPdf   data={data} lang={lang} />; break;
+    case "minimal":  doc = <MinimalPdf  data={data} lang={lang} />; break;
+    case "creative": doc = <CreativePdf data={data} lang={lang} />; break;
+    default:         doc = <ClassicPdf  data={data} lang={lang} />; break;
   }
 
   const blob = await pdf(doc).toBlob();
