@@ -51,6 +51,8 @@ export function validateCV(input: unknown): CVData | null {
       website:   str(p.website),
       linkedin:  str(p.linkedin),
       summary:   str(p.summary),
+      // only accept inline image data, never external URLs
+      photo:     str(p.photo).startsWith("data:image/") ? str(p.photo) : "",
     },
     experience: arr(d.experience).map((e) => ({
       id: id(e.id),

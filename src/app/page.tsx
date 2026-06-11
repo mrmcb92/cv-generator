@@ -285,6 +285,8 @@ function App() {
   const [templateId, setTemplateId] = useState<TemplateId>("classic");
   const [exporting, setExporting] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  // Which panel is visible on small screens (desktop always shows both)
+  const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
   const importRef = useRef<HTMLInputElement>(null);
 
   const showToast = (message: string, kind: Toast["kind"] = "success") => {
@@ -385,7 +387,7 @@ function App() {
 
       {/* ── Navbar ── */}
       <header
-        className={`flex-shrink-0 ${theme.navBg} flex items-center px-5 h-[52px] gap-4`}
+        className={`flex-shrink-0 ${theme.navBg} flex items-center px-5 h-[52px] gap-4 overflow-x-auto`}
         style={{ boxShadow: "0 1px 0 rgba(255,255,255,0.05)" }}
       >
         <div className="flex items-center gap-2 mr-1">
@@ -459,7 +461,7 @@ function App() {
 
         {/* Left panel */}
         <div
-          className="w-[46%] flex flex-col overflow-hidden"
+          className={`${mobileView === "preview" ? "hidden" : "flex"} w-full lg:flex lg:w-[46%] flex-col overflow-hidden`}
           style={{
             background: LEFT_PANEL_BG[theme.id],
             borderRight: isDark ? "1px solid rgba(255,255,255,0.05)" : "1px solid rgba(0,0,0,0.06)",
@@ -530,7 +532,7 @@ function App() {
 
         {/* Right panel */}
         <div
-          className="flex-1 flex flex-col overflow-hidden"
+          className={`${mobileView === "edit" ? "hidden" : "flex"} lg:flex flex-1 flex-col overflow-hidden`}
           style={{ background: RIGHT_PANEL_BG[theme.id] }}
         >
           {/* Template picker bar */}
@@ -551,6 +553,23 @@ function App() {
             </AnimatePresence>
           </div>
         </div>
+      </div>
+
+      {/* Mobile editor/preview toggle */}
+      <div className={`lg:hidden flex-shrink-0 flex border-t ${isDark ? "bg-zinc-900 border-white/10" : "bg-white border-black/10"}`}>
+        {([
+          { id: "edit" as const,    label: "Editor" },
+          { id: "preview" as const, label: "Previzualizare" },
+        ]).map((v) => (
+          <button key={v.id} onClick={() => setMobileView(v.id)}
+            className={`flex-1 py-3 text-[12px] font-semibold transition-colors ${
+              mobileView === v.id
+                ? isDark ? "text-cyan-400" : "text-sky-600"
+                : isDark ? "text-zinc-500" : "text-zinc-400"
+            }`}>
+            {v.label}
+          </button>
+        ))}
       </div>
 
       <ToastStack toasts={toasts} />

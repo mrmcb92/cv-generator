@@ -1,11 +1,13 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { PersonalInfo } from "@/types/cv";
 import { Theme } from "@/types/theme";
 import { motion } from "motion/react";
-import { EnvelopeSimple, Phone, MapPin, Globe, LinkedinLogo } from "@phosphor-icons/react";
+import { EnvelopeSimple, Phone, MapPin, Globe, LinkedinLogo, Camera, Trash } from "@phosphor-icons/react";
 import { DBInput, SectionHeader, fieldLabelClass } from "@/components/ui/fields";
 import { isValidEmail, isValidPhone, isValidUrl } from "@/lib/fieldValidation";
+import { processPhoto } from "@/lib/processPhoto";
 
 interface Props {
   data: PersonalInfo;
@@ -25,11 +27,57 @@ export default function PersonalSection({ data, onChange, theme }: Props) {
 
   const isDark = theme.id === "dark";
   const labelClass = fieldLabelClass(theme);
+  const photoRef = useRef<HTMLInputElement>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
+  const handlePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      setPhotoError(null);
+      update("photo", await processPhoto(file));
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : "Imaginea nu a putut fi procesată");
+    }
+  };
 
   return (
     <motion.div variants={STAGGER} initial="hidden" animate="visible" className="space-y-4">
       <motion.div variants={ITEM}>
         <SectionHeader eyebrow="Secțiunea 1" title="Informații personale" subtitle="Date de contact și prezentare" theme={theme} />
+      </motion.div>
+
+      {/* Profile photo */}
+      <motion.div variants={ITEM} className="flex items-center gap-3">
+        <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+        <button
+          onClick={() => photoRef.current?.click()}
+          aria-label={data.photo ? "Schimbă fotografia de profil" : "Adaugă fotografie de profil"}
+          className={`relative w-16 h-16 rounded-full overflow-hidden flex items-center justify-center transition-all duration-300 active:scale-[0.96] ${
+            data.photo
+              ? "ring-2 ring-sky-400/50"
+              : isDark ? "bg-white/[0.05] ring-1 ring-dashed ring-white/20 text-zinc-500 hover:text-zinc-300" : "bg-black/[0.03] ring-1 ring-dashed ring-black/15 text-zinc-400 hover:text-zinc-600"
+          }`}
+        >
+          {data.photo
+            ? /* eslint-disable-next-line @next/next/no-img-element -- small inline data URL, next/image adds nothing here */
+              <img src={data.photo} alt="Fotografie de profil" className="w-full h-full object-cover" />
+            : <Camera size={20} weight="regular" />}
+        </button>
+        <div>
+          <p className={`text-[12px] font-medium ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>Fotografie de profil</p>
+          <p className={`text-[10.5px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
+            Opțională — decupată automat pătrat. Apare pe template-urile Classic, Modern și Creative.
+          </p>
+          {photoError && <p className="text-[10.5px] mt-0.5 text-red-400">{photoError}</p>}
+          {data.photo && (
+            <button onClick={() => update("photo", "")}
+              className={`mt-1 flex items-center gap-1 text-[10.5px] transition-colors ${isDark ? "text-zinc-500 hover:text-red-400" : "text-zinc-400 hover:text-red-500"}`}>
+              <Trash size={10} weight="bold" /> Elimină fotografia
+            </button>
+          )}
+        </div>
       </motion.div>
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-3.5">

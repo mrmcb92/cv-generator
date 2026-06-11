@@ -28,6 +28,12 @@ export default function ModernTemplate({ data }: { data: CVData }) {
     >
       {/* ── LEFT SIDEBAR ── */}
       <div className="w-[35%] bg-slate-800 text-white flex-shrink-0 px-5 py-7">
+        {/* Photo */}
+        {p.photo && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={p.photo} alt="" className="w-20 h-20 rounded-full object-cover ring-2 ring-sky-400/40 mb-4" />
+        )}
+
         {/* Name */}
         <div className="mb-5">
           <div className="text-[22px] font-bold leading-tight tracking-tight">

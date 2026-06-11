@@ -7,6 +7,8 @@ export interface PersonalInfo {
   website?: string;
   linkedin?: string;
   summary: string;
+  /** Square profile photo as a data URL (image/jpeg), or empty */
+  photo?: string;
 }
 
 export interface WorkPosition {

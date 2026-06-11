@@ -82,7 +82,8 @@ export function exportToHtml(data: CVData) {
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1f2937; background: #f3f4f6; }
     .page { max-width: 210mm; margin: 0 auto; background: white; min-height: 297mm; }
-    header { background: #1e293b; color: white; padding: 2rem; }
+    header { background: #1e293b; color: white; padding: 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; }
+    .photo { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid #475569; }
     header h1 { font-size: 2rem; font-weight: 700; letter-spacing: 0.05em; }
     .contacts { margin-top: 0.75rem; color: #94a3b8; font-size: 11px; display: flex; flex-wrap: wrap; gap: 12px; }
     main { padding: 2rem; }
@@ -109,8 +110,11 @@ export function exportToHtml(data: CVData) {
 <body>
   <div class="page">
     <header>
-      <h1>${esc(fullName) || "Nume Prenume"}</h1>
-      <div class="contacts">${contacts}</div>
+      <div>
+        <h1>${esc(fullName) || "Nume Prenume"}</h1>
+        <div class="contacts">${contacts}</div>
+      </div>
+      ${personal.photo?.startsWith("data:image/") ? `<img class="photo" src="${personal.photo}" alt="" />` : ""}
     </header>
     <main>
       ${personal.summary ? `<section><h2>Profil</h2><p>${esc(personal.summary)}</p></section>` : ""}

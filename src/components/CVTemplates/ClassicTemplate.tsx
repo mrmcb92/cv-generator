@@ -16,15 +16,21 @@ export default function ClassicTemplate({ data }: { data: CVData }) {
       style={{ minHeight: "297mm", fontSize: "11px", lineHeight: "1.5" }}
     >
       {/* Header */}
-      <div className="bg-slate-800 text-white px-8 py-7">
-        <h1 className="text-[28px] font-bold tracking-wide leading-tight">{name}</h1>
-        <div className="flex flex-wrap gap-x-5 gap-y-1 mt-3 text-slate-300 text-[11px]">
-          {p.email    && <span className="flex items-center gap-1"><Mail size={11}/>{p.email}</span>}
-          {p.phone    && <span className="flex items-center gap-1"><Phone size={11}/>{p.phone}</span>}
-          {p.location && <span className="flex items-center gap-1"><MapPin size={11}/>{p.location}</span>}
-          {p.website  && <span className="flex items-center gap-1"><Globe size={11}/>{p.website}</span>}
-          {p.linkedin && <span className="flex items-center gap-1"><Link2 size={11}/>{p.linkedin}</span>}
+      <div className="bg-slate-800 text-white px-8 py-7 flex items-center justify-between gap-6">
+        <div>
+          <h1 className="text-[28px] font-bold tracking-wide leading-tight">{name}</h1>
+          <div className="flex flex-wrap gap-x-5 gap-y-1 mt-3 text-slate-300 text-[11px]">
+            {p.email    && <span className="flex items-center gap-1"><Mail size={11}/>{p.email}</span>}
+            {p.phone    && <span className="flex items-center gap-1"><Phone size={11}/>{p.phone}</span>}
+            {p.location && <span className="flex items-center gap-1"><MapPin size={11}/>{p.location}</span>}
+            {p.website  && <span className="flex items-center gap-1"><Globe size={11}/>{p.website}</span>}
+            {p.linkedin && <span className="flex items-center gap-1"><Link2 size={11}/>{p.linkedin}</span>}
+          </div>
         </div>
+        {p.photo && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={p.photo} alt="" className="w-[72px] h-[72px] rounded-full object-cover ring-2 ring-slate-600 flex-shrink-0" />
+        )}
       </div>
 
       <div className="px-8 py-6 space-y-5">

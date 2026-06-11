@@ -38,13 +38,19 @@ export default function CreativeTemplate({ data }: { data: CVData }) {
               {p.lastName && <span className="text-zinc-800"> {p.lastName}</span>}
             </h1>
           </div>
-          {/* Contact cluster */}
-          <div className="text-right text-[10px] text-zinc-500 space-y-0.5">
+          {/* Contact cluster + photo */}
+          <div className="flex items-center gap-4">
+          {p.photo && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={p.photo} alt="" className="w-16 h-16 rounded-full object-cover ring-2 ring-sky-200 order-2 flex-shrink-0" />
+          )}
+          <div className="text-right text-[10px] text-zinc-500 space-y-0.5 order-1">
             {p.email    && <div className="flex items-center justify-end gap-1"><span>{p.email}</span><Mail size={10} className="text-sky-400"/></div>}
             {p.phone    && <div className="flex items-center justify-end gap-1"><span>{p.phone}</span><Phone size={10} className="text-sky-400"/></div>}
             {p.location && <div className="flex items-center justify-end gap-1"><span>{p.location}</span><MapPin size={10} className="text-sky-400"/></div>}
             {p.website  && <div className="flex items-center justify-end gap-1"><span>{p.website}</span><Globe size={10} className="text-sky-400"/></div>}
             {p.linkedin && <div className="flex items-center justify-end gap-1"><span>{p.linkedin}</span><Link2 size={10} className="text-sky-400"/></div>}
+          </div>
           </div>
         </div>
       </div>

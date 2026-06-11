@@ -3,6 +3,7 @@ import {
   Packer,
   Paragraph,
   TextRun,
+  ImageRun,
   HeadingLevel,
   AlignmentType,
   BorderStyle,
@@ -32,6 +33,24 @@ export async function exportToDocx(data: CVData) {
   const fullName = `${personal.firstName} ${personal.lastName}`.trim();
 
   const children: (Paragraph | Table)[] = [];
+
+  // Profile photo (square JPEG data URL produced by the app)
+  if (personal.photo?.startsWith("data:image/")) {
+    const base64 = personal.photo.split(",")[1] ?? "";
+    children.push(
+      new Paragraph({
+        children: [
+          new ImageRun({
+            type: "jpg",
+            data: Uint8Array.from(atob(base64), (c) => c.charCodeAt(0)),
+            transformation: { width: 96, height: 96 },
+          }),
+        ],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 120 },
+      })
+    );
+  }
 
   // Name
   children.push(

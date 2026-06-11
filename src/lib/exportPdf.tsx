@@ -1,5 +1,5 @@
 import React from "react";
-import { Document, Page, Text, View, StyleSheet, pdf, Font } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, pdf, Font, Image } from "@react-pdf/renderer";
 import { CVData } from "@/types/cv";
 import { TemplateId } from "@/types/template";
 
@@ -63,17 +63,23 @@ function ClassicPdf({ data }: { data: CVData }) {
   return (
     <Document>
       <Page size="A4" style={classicS.page}>
-        <View style={classicS.header}>
-          <Text style={classicS.name}>
-            {`${p.firstName} ${p.lastName}`.trim() || "Nume Prenume"}
-          </Text>
-          <View style={classicS.contactRow}>
-            {p.email    && <Text style={classicS.contactItem}>{p.email}</Text>}
-            {p.phone    && <Text style={classicS.contactItem}>{p.phone}</Text>}
-            {p.location && <Text style={classicS.contactItem}>{p.location}</Text>}
-            {p.website  && <Text style={classicS.contactItem}>{p.website}</Text>}
-            {p.linkedin && <Text style={classicS.contactItem}>{p.linkedin}</Text>}
+        <View style={[classicS.header, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
+          <View>
+            <Text style={classicS.name}>
+              {`${p.firstName} ${p.lastName}`.trim() || "Nume Prenume"}
+            </Text>
+            <View style={classicS.contactRow}>
+              {p.email    && <Text style={classicS.contactItem}>{p.email}</Text>}
+              {p.phone    && <Text style={classicS.contactItem}>{p.phone}</Text>}
+              {p.location && <Text style={classicS.contactItem}>{p.location}</Text>}
+              {p.website  && <Text style={classicS.contactItem}>{p.website}</Text>}
+              {p.linkedin && <Text style={classicS.contactItem}>{p.linkedin}</Text>}
+            </View>
           </View>
+          {p.photo ? (
+            // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an HTML img
+            <Image src={p.photo} style={{ width: 64, height: 64, borderRadius: 32, marginLeft: 16 }} />
+          ) : null}
         </View>
         <View style={classicS.body}>
           {p.summary && (
@@ -203,6 +209,10 @@ function ModernPdf({ data }: { data: CVData }) {
     <Document>
       <Page size="A4" style={modernS.page}>
         <View style={modernS.sidebar}>
+          {p.photo ? (
+            // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an HTML img
+            <Image src={p.photo} style={{ width: 76, height: 76, borderRadius: 38, marginBottom: 12 }} />
+          ) : null}
           <Text style={modernS.nameFirst}>{p.firstName || "Prenume"}</Text>
           <Text style={modernS.nameLast}>{p.lastName || "Nume"}</Text>
           <Text style={modernS.sideSecTitle}>Contact</Text>
@@ -469,12 +479,18 @@ function CreativePdf({ data }: { data: CVData }) {
             <Text style={creativeS.nameFirst}>{p.firstName || "Prenume"}</Text>
             <Text style={creativeS.nameLast}>{p.lastName || "Nume"}</Text>
           </View>
-          <View style={creativeS.contactBlock}>
-            {p.email    && <Text style={creativeS.contactItem}>{p.email}</Text>}
-            {p.phone    && <Text style={creativeS.contactItem}>{p.phone}</Text>}
-            {p.location && <Text style={creativeS.contactItem}>{p.location}</Text>}
-            {p.website  && <Text style={creativeS.contactItem}>{p.website}</Text>}
-            {p.linkedin && <Text style={creativeS.contactItem}>{p.linkedin}</Text>}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <View style={creativeS.contactBlock}>
+              {p.email    && <Text style={creativeS.contactItem}>{p.email}</Text>}
+              {p.phone    && <Text style={creativeS.contactItem}>{p.phone}</Text>}
+              {p.location && <Text style={creativeS.contactItem}>{p.location}</Text>}
+              {p.website  && <Text style={creativeS.contactItem}>{p.website}</Text>}
+              {p.linkedin && <Text style={creativeS.contactItem}>{p.linkedin}</Text>}
+            </View>
+            {p.photo ? (
+              // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an HTML img
+              <Image src={p.photo} style={{ width: 56, height: 56, borderRadius: 28 }} />
+            ) : null}
           </View>
         </View>
         <View style={creativeS.body}>
