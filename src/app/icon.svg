@@ -1,0 +1,57 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#243449"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7dd3fc"/>
+      <stop offset="1" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <clipPath id="doc">
+      <rect x="116" y="96" width="280" height="320" rx="28"/>
+    </clipPath>
+    <filter id="sh" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#000000" flood-opacity="0.40"/>
+    </filter>
+  </defs>
+
+  <!-- background -->
+  <rect width="512" height="512" rx="115" fill="url(#bg)"/>
+  <!-- subtle sky glow in the corner -->
+  <circle cx="438" cy="84" r="130" fill="#38bdf8" opacity="0.12"/>
+
+  <!-- document card -->
+  <g filter="url(#sh)">
+    <rect x="116" y="96" width="280" height="320" rx="28" fill="#f8fafc"/>
+  </g>
+
+  <!-- left navy sidebar + avatar + lines, clipped to the rounded card -->
+  <g clip-path="url(#doc)">
+    <rect x="116" y="96" width="104" height="320" fill="#1e293b"/>
+    <circle cx="168" cy="152" r="27" fill="url(#sky)"/>
+    <rect x="140" y="198" width="56" height="9"  rx="4.5" fill="#38bdf8"/>
+    <rect x="140" y="219" width="44" height="7"  rx="3.5" fill="#64748b"/>
+    <rect x="140" y="250" width="56" height="7"  rx="3.5" fill="#475569"/>
+    <rect x="140" y="266" width="50" height="7"  rx="3.5" fill="#475569"/>
+    <rect x="140" y="298" width="56" height="7"  rx="3.5" fill="#475569"/>
+    <rect x="140" y="314" width="40" height="7"  rx="3.5" fill="#475569"/>
+  </g>
+
+  <!-- right content on the white card -->
+  <rect x="244" y="140" width="116" height="13" rx="6.5" fill="#0f172a"/>
+  <rect x="244" y="162" width="78"  height="9"  rx="4.5" fill="url(#sky)"/>
+  <g fill="#cbd5e1">
+    <rect x="244" y="198" width="116" height="7" rx="3.5"/>
+    <rect x="244" y="214" width="100" height="7" rx="3.5"/>
+    <rect x="244" y="230" width="116" height="7" rx="3.5"/>
+  </g>
+  <rect x="244" y="260" width="68" height="9" rx="4.5" fill="url(#sky)"/>
+  <g fill="#cbd5e1">
+    <rect x="244" y="282" width="116" height="7" rx="3.5"/>
+    <rect x="244" y="298" width="92"  height="7" rx="3.5"/>
+    <rect x="244" y="314" width="116" height="7" rx="3.5"/>
+    <rect x="244" y="346" width="116" height="7" rx="3.5"/>
+    <rect x="244" y="362" width="80"  height="7" rx="3.5"/>
+  </g>
+</svg>
