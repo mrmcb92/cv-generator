@@ -4,19 +4,22 @@ import { CVData } from "@/types/cv";
 import { TemplateId } from "@/types/template";
 
 // ─── Font registration (Roboto with Romanian/Latin-Ext support) ───
+// In the browser "/fonts/..." resolves against the app origin; in Node
+// (smoke tests, future SSR) it falls back to the files in public/.
+const FONT_BASE = typeof window === "undefined" ? "public" : "";
 Font.register({
   family: "Roboto",
   fonts: [
     {
-      src: "/fonts/Roboto-Regular.ttf",
+      src: `${FONT_BASE}/fonts/Roboto-Regular.ttf`,
       fontWeight: 400,
     },
     {
-      src: "/fonts/Roboto-Bold.ttf",
+      src: `${FONT_BASE}/fonts/Roboto-Bold.ttf`,
       fontWeight: 700,
     },
     {
-      src: "/fonts/Roboto-Italic.ttf",
+      src: `${FONT_BASE}/fonts/Roboto-Italic.ttf`,
       fontWeight: 400,
       fontStyle: "italic",
     },
@@ -97,7 +100,7 @@ function ClassicPdf({ data, lang }: { data: CVData; lang: CvLang }) {
                 <View key={e.id} style={{ marginBottom: 10 }}>
                   {e.company && <Text style={[classicS.expTitle, { marginBottom: 4 }]}>{e.company}</Text>}
                   {e.positions.map(pos => (
-                    <View key={pos.id} style={[classicS.expItem, { marginLeft: 8, borderLeftWidth: 2, borderLeftColor: "#e2e8f0", paddingLeft: 6 }]}>
+                    <View key={pos.id} wrap={false} style={[classicS.expItem, { marginLeft: 8, borderLeftWidth: 2, borderLeftColor: "#e2e8f0", paddingLeft: 6 }]}>
                       <View style={classicS.expRow}>
                         <Text style={[classicS.expTitle, { fontWeight: "normal" }]}>{pos.title}</Text>
                         <Text style={classicS.expDate}>
@@ -115,7 +118,7 @@ function ClassicPdf({ data, lang }: { data: CVData; lang: CvLang }) {
             <View style={classicS.section}>
               <Text style={classicS.secTitle}>{L.education}</Text>
               {education.map(e => (
-                <View key={e.id} style={[classicS.expItem, { marginBottom: 6 }]}>
+                <View key={e.id} wrap={false} style={[classicS.expItem, { marginBottom: 6 }]}>
                   <View style={classicS.expRow}>
                     <Text style={classicS.expTitle}>
                       {e.degree}{e.field ? ` ${L.inWord} ${e.field}` : ""}{e.institution ? `  ·  ${e.institution}` : ""}
@@ -192,8 +195,11 @@ function ClassicPdf({ data, lang }: { data: CVData; lang: CvLang }) {
 // 2. MODERN — navy sidebar 35% + light content 65%
 // ═══════════════════════════════════════════════════════════════════
 const modernS = StyleSheet.create({
-  page:      { flexDirection: "row", backgroundColor: "#ffffff", fontFamily: "Roboto", fontSize: 11 },
-  sidebar:   { width: "35%", backgroundColor: "#1e293b", padding: "28 20" },
+  page:      { flexDirection: "row", backgroundColor: "#f1f5f9", fontFamily: "Roboto", fontSize: 11 },
+  // full-height bar painted on every page, so the sidebar background
+  // continues correctly when the CV flows onto page 2+
+  sidebarBg: { position: "absolute", top: 0, bottom: 0, left: 0, width: "35%", backgroundColor: "#1e293b" },
+  sidebar:   { width: "35%", paddingTop: 28, paddingBottom: 12, paddingHorizontal: 20 },
   nameFirst: { fontSize: 22, fontWeight: "bold", color: "#38bdf8", lineHeight: 1.1 },
   nameLast:  { fontSize: 22, fontWeight: "bold", color: "#ffffff", lineHeight: 1.1, marginBottom: 14 },
   sideSecTitle: { fontSize: 9, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1.6,
@@ -207,7 +213,7 @@ const modernS = StyleSheet.create({
   langRow:   { flexDirection: "row", justifyContent: "space-between", marginBottom: 3 },
   langName:  { fontSize: 10, color: "#94a3b8" },
   langLvl:   { fontSize: 9, color: "#38bdf8", fontWeight: "bold" },
-  content:   { flex: 1, padding: "28 22", backgroundColor: "#f1f5f9" },
+  content:   { flex: 1, paddingTop: 28, paddingBottom: 12, paddingHorizontal: 22 },
   section:   { marginBottom: 14 },
   secTitle:  { fontSize: 10, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1.4,
                color: "#0284c7", borderBottomWidth: 2, borderBottomColor: "#e2e8f0",
@@ -228,6 +234,7 @@ function ModernPdf({ data, lang }: { data: CVData; lang: CvLang }) {
   return (
     <Document>
       <Page size="A4" style={modernS.page}>
+        <View style={modernS.sidebarBg} fixed />
         <View style={modernS.sidebar}>
           {p.photo ? (
             // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an HTML img
@@ -294,7 +301,7 @@ function ModernPdf({ data, lang }: { data: CVData; lang: CvLang }) {
                 <View key={e.id} style={{ marginBottom: 10 }}>
                   {e.company && <Text style={[modernS.expComp, { marginBottom: 4 }]}>{e.company}</Text>}
                   {e.positions.map(pos => (
-                    <View key={pos.id} style={modernS.expItem}>
+                    <View key={pos.id} wrap={false} style={modernS.expItem}>
                       <View style={modernS.expRow}>
                         <Text style={modernS.expTitle}>{pos.title}</Text>
                         <Text style={modernS.expDate}>
@@ -312,7 +319,7 @@ function ModernPdf({ data, lang }: { data: CVData; lang: CvLang }) {
             <View style={modernS.section}>
               <Text style={modernS.secTitle}>{L.education}</Text>
               {education.map(e => (
-                <View key={e.id} style={modernS.expItem}>
+                <View key={e.id} wrap={false} style={modernS.expItem}>
                   <View style={modernS.expRow}>
                     <Text style={modernS.expTitle}>
                       {e.degree}{e.field ? ` · ${e.field}` : ""}
@@ -330,7 +337,7 @@ function ModernPdf({ data, lang }: { data: CVData; lang: CvLang }) {
             <View key={cs.id} style={modernS.section}>
               <Text style={modernS.secTitle}>{cs.title}</Text>
               {cs.items.map(it => (
-                <View key={it.id} style={modernS.expItem}>
+                <View key={it.id} wrap={false} style={modernS.expItem}>
                   <View style={modernS.expRow}>
                     <Text style={modernS.expTitle}>{it.name}</Text>
                     {it.date ? <Text style={modernS.expDate}>{it.date}</Text> : null}
@@ -396,7 +403,7 @@ function MinimalPdf({ data, lang }: { data: CVData; lang: CvLang }) {
               <View key={e.id} style={{ marginBottom: 10 }}>
                 {e.company && <Text style={[minimalS.expTitle, { marginBottom: 4 }]}>{e.company}</Text>}
                 {e.positions.map(pos => (
-                  <View key={pos.id} style={[minimalS.expItem, { marginLeft: 8, borderLeftWidth: 1, borderLeftColor: "#e4e4e7", paddingLeft: 8 }]}>
+                  <View key={pos.id} wrap={false} style={[minimalS.expItem, { marginLeft: 8, borderLeftWidth: 1, borderLeftColor: "#e4e4e7", paddingLeft: 8 }]}>
                     <View style={minimalS.expLeft}>
                       <Text style={[minimalS.expTitle, { fontWeight: "normal", fontSize: 11 }]}>{pos.title}</Text>
                       {pos.description && <Text style={minimalS.expDesc}>{pos.description}</Text>}
@@ -415,7 +422,7 @@ function MinimalPdf({ data, lang }: { data: CVData; lang: CvLang }) {
           <View style={minimalS.section}>
             <Text style={minimalS.secTitle}>{L.education}</Text>
             {education.map(e => (
-              <View key={e.id} style={minimalS.expItem}>
+              <View key={e.id} wrap={false} style={minimalS.expItem}>
                 <View style={minimalS.expLeft}>
                   <Text style={minimalS.expTitle}>
                     {e.degree}{e.field ? `, ${e.field}` : ""}
@@ -446,7 +453,7 @@ function MinimalPdf({ data, lang }: { data: CVData; lang: CvLang }) {
           <View key={cs.id} style={minimalS.section}>
             <Text style={minimalS.secTitle}>{cs.title}</Text>
             {cs.items.map(it => (
-              <View key={it.id} style={minimalS.expItem}>
+              <View key={it.id} wrap={false} style={minimalS.expItem}>
                 <View style={minimalS.expLeft}>
                   <Text style={minimalS.expTitle}>{it.name}{it.subtitle ? `, ${it.subtitle}` : ""}</Text>
                   {it.description ? <Text style={minimalS.expDesc}>{it.description}</Text> : null}
@@ -563,7 +570,7 @@ function CreativePdf({ data, lang }: { data: CVData; lang: CvLang }) {
                   <View style={creativeS.expDot} />
                   {e.company && <Text style={creativeS.expComp}>{e.company}</Text>}
                   {e.positions.map(pos => (
-                    <View key={pos.id} style={{ paddingLeft: 8, borderLeftWidth: 1, borderLeftColor: "#bae6fd", marginTop: 4 }}>
+                    <View key={pos.id} wrap={false} style={{ paddingLeft: 8, borderLeftWidth: 1, borderLeftColor: "#bae6fd", marginTop: 4 }}>
                       <View style={creativeS.expRow}>
                         <Text style={creativeS.expTitle}>{pos.title}</Text>
                         <Text style={creativeS.expBadge}>
@@ -584,7 +591,7 @@ function CreativePdf({ data, lang }: { data: CVData; lang: CvLang }) {
                 <Text style={creativeS.secTitle}>{L.education}</Text>
               </View>
               {education.map(e => (
-                <View key={e.id} style={creativeS.eduItem}>
+                <View key={e.id} wrap={false} style={creativeS.eduItem}>
                   <View>
                     <Text style={creativeS.eduTitle}>
                       {e.degree}{e.field ? ` · ${e.field}` : ""}
@@ -636,7 +643,7 @@ function CreativePdf({ data, lang }: { data: CVData; lang: CvLang }) {
                 <Text style={creativeS.secTitle}>{cs.title}</Text>
               </View>
               {cs.items.map(it => (
-                <View key={it.id} style={{ marginBottom: 8, paddingLeft: 12 }}>
+                <View key={it.id} wrap={false} style={{ marginBottom: 8, paddingLeft: 12 }}>
                   <View style={creativeS.expRow}>
                     <Text style={creativeS.expTitle}>{it.name}{it.subtitle ? ` · ${it.subtitle}` : ""}</Text>
                     {it.date ? <Text style={creativeS.expBadge}>{it.date}</Text> : null}
@@ -668,20 +675,27 @@ function CreativePdf({ data, lang }: { data: CVData; lang: CvLang }) {
 }
 
 // ─── Public API ────────────────────────────────────────────────────
+export function buildPdfDocument(
+  data: CVData,
+  templateId: TemplateId = "classic",
+  lang: CvLang = "ro",
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): React.ReactElement<any> {
+  switch (templateId) {
+    case "modern":   return <ModernPdf   data={data} lang={lang} />;
+    case "minimal":  return <MinimalPdf  data={data} lang={lang} />;
+    case "creative": return <CreativePdf data={data} lang={lang} />;
+    default:         return <ClassicPdf  data={data} lang={lang} />;
+  }
+}
+
 export async function exportToPdf(
   lastName: string,
   data: CVData,
   templateId: TemplateId = "classic",
   lang: CvLang = "ro",
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let doc: React.ReactElement<any>;
-  switch (templateId) {
-    case "modern":   doc = <ModernPdf   data={data} lang={lang} />; break;
-    case "minimal":  doc = <MinimalPdf  data={data} lang={lang} />; break;
-    case "creative": doc = <CreativePdf data={data} lang={lang} />; break;
-    default:         doc = <ClassicPdf  data={data} lang={lang} />; break;
-  }
+  const doc = buildPdfDocument(data, templateId, lang);
 
   const blob = await pdf(doc).toBlob();
   const url  = URL.createObjectURL(blob);
