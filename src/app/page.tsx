@@ -16,8 +16,14 @@ import { CvLang } from "@/lib/cvLabels";
 import {
   FilePdf, FileDoc, FileHtml, FileArrowDown, UploadSimple,
   User, Briefcase, GraduationCap, Star, Stack,
-  ArrowUpRight, Circle, Plus, PencilSimple, Trash,
+  ArrowUpRight, Circle, Plus, PencilSimple, Trash, List, X,
 } from "@phosphor-icons/react";
+
+const EXPORTS = [
+  { type: "pdf",  label: "PDF",  Icon: FilePdf,  color: "bg-rose-500/90 hover:bg-rose-500" },
+  { type: "docx", label: "Word", Icon: FileDoc,  color: "bg-sky-500/90 hover:bg-sky-500" },
+  { type: "html", label: "HTML", Icon: FileHtml, color: "bg-emerald-500/90 hover:bg-emerald-500" },
+] as const;
 import { themes, ThemeId } from "@/types/theme";
 import { useTheme as useAppTheme } from "@/context/ThemeContext";
 
@@ -314,6 +320,8 @@ function App() {
   const [activeProfileId, setActiveProfileId] = useState<string>("");
   // Which panel is visible on small screens (desktop always shows both)
   const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
+  // Mobile toolbar menu (theme/profile/lang/import/export) open state
+  const [menuOpen, setMenuOpen] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
 
   const showToast = (message: string, kind: Toast["kind"] = "success") => {
@@ -509,115 +517,220 @@ function App() {
   return (
     <div className={`h-screen flex flex-col overflow-hidden ${theme.pageBg}`}>
 
+      {/* Import hidden input (shared by desktop + mobile import buttons) */}
+      <input
+        ref={importRef}
+        type="file"
+        accept=".json,.cv.json,.html,.htm"
+        className="hidden"
+        onChange={handleImport}
+      />
+
       {/* ── Navbar ── */}
       <header
-        className={`flex-shrink-0 ${theme.navBg} flex items-center px-5 h-[52px] gap-4 overflow-x-auto`}
+        className={`relative z-40 flex-shrink-0 ${theme.navBg} flex items-center px-4 sm:px-5 h-[52px] gap-4`}
         style={{ boxShadow: "0 1px 0 rgba(255,255,255,0.05)" }}
       >
-        <div className="flex items-center gap-2 mr-1">
+        <div className="flex items-center gap-2 mr-auto lg:mr-1">
           <div className={`w-5 h-5 rounded-md flex items-center justify-center ${isDark ? "bg-cyan-400/20" : "bg-white/15"}`}>
             <Circle size={8} weight="fill" className={isDark ? "text-cyan-400" : "text-white/80"} />
           </div>
           <span className={`text-[13px] font-semibold tracking-tight ${theme.navText}`}>Generator CV</span>
         </div>
 
-        <ThemePicker />
+        {/* ── Desktop inline controls (lg and up) ── */}
+        <div className="hidden lg:flex items-center gap-4 flex-1">
+          <ThemePicker />
 
-        {/* Profile selector */}
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <select
-            value={activeProfileId}
-            onChange={(e) => switchProfile(e.target.value)}
-            aria-label="Profil CV activ"
-            className={`text-[11px] font-medium rounded-full px-2.5 py-1 outline-none cursor-pointer max-w-[140px] ${isDark ? "bg-white/8 text-white/80" : "bg-black/8 text-zinc-700"}`}
+          {/* Profile selector */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <select
+              value={activeProfileId}
+              onChange={(e) => switchProfile(e.target.value)}
+              aria-label="Profil CV activ"
+              className={`text-[11px] font-medium rounded-full px-2.5 py-1 outline-none cursor-pointer max-w-[140px] ${isDark ? "bg-white/8 text-white/80" : "bg-black/8 text-zinc-700"}`}
+            >
+              {profiles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+            <button onClick={newProfile} title="CV nou" aria-label="Creează profil CV nou"
+              className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/10" : "text-zinc-500 hover:text-zinc-900 hover:bg-black/8"}`}>
+              <Plus size={11} weight="bold" />
+            </button>
+            <button onClick={renameProfile} title="Redenumește" aria-label="Redenumește profilul activ"
+              className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/10" : "text-zinc-500 hover:text-zinc-900 hover:bg-black/8"}`}>
+              <PencilSimple size={11} weight="bold" />
+            </button>
+            <button onClick={deleteProfile} title="Șterge profilul" aria-label="Șterge profilul activ"
+              className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDark ? "text-white/50 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-500 hover:text-red-500 hover:bg-red-50"}`}>
+              <Trash size={11} weight="bold" />
+            </button>
+          </div>
+
+          {/* CV language toggle */}
+          <div className={`flex items-center rounded-full p-0.5 flex-shrink-0 ${isDark ? "bg-white/8" : "bg-black/8"}`} title="Limba CV-ului (etichetele secțiunilor)">
+            {(["ro", "en"] as const).map((lng) => (
+              <button key={lng} onClick={() => changeLang(lng)}
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase transition-all ${
+                  cvLang === lng
+                    ? "bg-sky-500 text-white"
+                    : isDark ? "text-white/50 hover:text-white/80" : "text-zinc-500 hover:text-zinc-800"
+                }`}>
+                {lng}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-1" />
+
+          {/* Import + Save buttons */}
+          <button
+            onClick={() => importRef.current?.click()}
+            title="Importă CV (.cv.json sau .html)"
+            className={`group flex items-center gap-1.5 text-[11px] font-semibold pl-2.5 pr-1 py-1 rounded-full transition-all duration-300 active:scale-[0.97] ${isDark ? "bg-white/8 hover:bg-white/14 text-white/60 hover:text-white" : "bg-black/8 hover:bg-black/14 text-zinc-600 hover:text-zinc-900"}`}
+            style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)" }}
           >
-            {profiles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-          <button onClick={newProfile} title="CV nou" aria-label="Creează profil CV nou"
-            className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/10" : "text-zinc-500 hover:text-zinc-900 hover:bg-black/8"}`}>
-            <Plus size={11} weight="bold" />
+            Importă
+            <span className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${isDark ? "bg-white/10 group-hover:bg-white/20" : "bg-black/8 group-hover:bg-black/15"}`}>
+              <UploadSimple size={10} weight="bold" />
+            </span>
           </button>
-          <button onClick={renameProfile} title="Redenumește" aria-label="Redenumește profilul activ"
-            className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/10" : "text-zinc-500 hover:text-zinc-900 hover:bg-black/8"}`}>
-            <PencilSimple size={11} weight="bold" />
-          </button>
-          <button onClick={deleteProfile} title="Șterge profilul" aria-label="Șterge profilul activ"
-            className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDark ? "text-white/50 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-500 hover:text-red-500 hover:bg-red-50"}`}>
-            <Trash size={11} weight="bold" />
-          </button>
-        </div>
 
-        {/* CV language toggle */}
-        <div className={`flex items-center rounded-full p-0.5 flex-shrink-0 ${isDark ? "bg-white/8" : "bg-black/8"}`} title="Limba CV-ului (etichetele secțiunilor)">
-          {(["ro", "en"] as const).map((lng) => (
-            <button key={lng} onClick={() => changeLang(lng)}
-              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase transition-all ${
-                cvLang === lng
-                  ? "bg-sky-500 text-white"
-                  : isDark ? "text-white/50 hover:text-white/80" : "text-zinc-500 hover:text-zinc-800"
-              }`}>
-              {lng}
+          <button
+            onClick={handleSaveJson}
+            title="Salvează CV ca fișier JSON (pentru re-import ulterior)"
+            className={`group flex items-center gap-1.5 text-[11px] font-semibold pl-2.5 pr-1 py-1 rounded-full transition-all duration-300 active:scale-[0.97] ${isDark ? "bg-white/8 hover:bg-white/14 text-white/60 hover:text-white" : "bg-black/8 hover:bg-black/14 text-zinc-600 hover:text-zinc-900"}`}
+            style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)" }}
+          >
+            Salvează
+            <span className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${isDark ? "bg-white/10 group-hover:bg-white/20" : "bg-black/8 group-hover:bg-black/15"}`}>
+              <FileArrowDown size={10} weight="bold" />
+            </span>
+          </button>
+
+          {EXPORTS.map(({ type, label, Icon, color }) => (
+            <button
+              key={type}
+              onClick={() => handleExport(type)}
+              disabled={exporting !== null}
+              className={`group flex items-center gap-2 text-white text-[11px] font-semibold pl-3 pr-1 py-1 rounded-full disabled:opacity-40 transition-all duration-300 active:scale-[0.97] ${color}`}
+              style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)" }}
+            >
+              {exporting === type ? "..." : label}
+              <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                {exporting === type
+                  ? <ArrowUpRight size={10} weight="bold" className="animate-spin" />
+                  : <Icon size={10} weight="bold" />}
+              </span>
             </button>
           ))}
         </div>
 
-        <div className="flex-1" />
-
-        {/* Import hidden input */}
-        <input
-          ref={importRef}
-          type="file"
-          accept=".json,.cv.json,.html,.htm"
-          className="hidden"
-          onChange={handleImport}
-        />
-
-        {/* Import + Save buttons */}
+        {/* ── Mobile menu button (below lg) ── */}
         <button
-          onClick={() => importRef.current?.click()}
-          title="Importă CV (.cv.json sau .html)"
-          className={`group flex items-center gap-1.5 text-[11px] font-semibold pl-2.5 pr-1 py-1 rounded-full transition-all duration-300 active:scale-[0.97] ${isDark ? "bg-white/8 hover:bg-white/14 text-white/60 hover:text-white" : "bg-black/8 hover:bg-black/14 text-zinc-600 hover:text-zinc-900"}`}
-          style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)" }}
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-label="Meniu"
+          aria-expanded={menuOpen}
+          className="lg:hidden flex items-center gap-1.5 text-[12px] font-semibold text-white/90 bg-white/12 hover:bg-white/20 rounded-full pl-2.5 pr-3.5 py-1.5 active:scale-95 transition"
         >
-          Importă
-          <span className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${isDark ? "bg-white/10 group-hover:bg-white/20" : "bg-black/8 group-hover:bg-black/15"}`}>
-            <UploadSimple size={10} weight="bold" />
-          </span>
+          {menuOpen ? <X size={15} weight="bold" /> : <List size={15} weight="bold" />}
+          Meniu
         </button>
-
-        <button
-          onClick={handleSaveJson}
-          title="Salvează CV ca fișier JSON (pentru re-import ulterior)"
-          className={`group flex items-center gap-1.5 text-[11px] font-semibold pl-2.5 pr-1 py-1 rounded-full transition-all duration-300 active:scale-[0.97] ${isDark ? "bg-white/8 hover:bg-white/14 text-white/60 hover:text-white" : "bg-black/8 hover:bg-black/14 text-zinc-600 hover:text-zinc-900"}`}
-          style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)" }}
-        >
-          Salvează
-          <span className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${isDark ? "bg-white/10 group-hover:bg-white/20" : "bg-black/8 group-hover:bg-black/15"}`}>
-            <FileArrowDown size={10} weight="bold" />
-          </span>
-        </button>
-
-        {([
-          { type: "pdf",  label: "PDF",  Icon: FilePdf,  color: "bg-rose-500/90 hover:bg-rose-500" },
-          { type: "docx", label: "Word", Icon: FileDoc,  color: "bg-sky-500/90 hover:bg-sky-500" },
-          { type: "html", label: "HTML", Icon: FileHtml, color: "bg-emerald-500/90 hover:bg-emerald-500" },
-        ] as const).map(({ type, label, Icon, color }) => (
-          <button
-            key={type}
-            onClick={() => handleExport(type)}
-            disabled={exporting !== null}
-            className={`group flex items-center gap-2 text-white text-[11px] font-semibold pl-3 pr-1 py-1 rounded-full disabled:opacity-40 transition-all duration-300 active:scale-[0.97] ${color}`}
-            style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)" }}
-          >
-            {exporting === type ? "..." : label}
-            <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
-              {exporting === type
-                ? <ArrowUpRight size={10} weight="bold" className="animate-spin" />
-                : <Icon size={10} weight="bold" />}
-            </span>
-          </button>
-        ))}
       </header>
+
+      {/* ── Mobile menu sheet (below lg) ── */}
+      {menuOpen && (
+        <div className="lg:hidden">
+          <div className="fixed inset-x-0 bottom-0 top-[52px] z-30 bg-black/50" onClick={() => setMenuOpen(false)} />
+          <div className={`fixed top-[52px] inset-x-0 z-40 max-h-[calc(100vh-52px)] overflow-y-auto px-4 py-4 space-y-5 border-t border-white/10 shadow-2xl ${theme.navBg}`}>
+            {/* Export */}
+            <section>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">Exportă CV</p>
+              <div className="grid grid-cols-3 gap-2">
+                {EXPORTS.map(({ type, label, Icon, color }) => (
+                  <button
+                    key={type}
+                    onClick={() => { handleExport(type); setMenuOpen(false); }}
+                    disabled={exporting !== null}
+                    className={`flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl text-white text-[12px] font-semibold disabled:opacity-40 active:scale-95 transition ${color}`}
+                  >
+                    {exporting === type
+                      ? <ArrowUpRight size={20} weight="bold" className="animate-spin" />
+                      : <Icon size={20} weight="bold" />}
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* File */}
+            <section>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">Fișier</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => { importRef.current?.click(); setMenuOpen(false); }}
+                  className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12.5px] font-semibold text-white/85 bg-white/10 hover:bg-white/15 active:scale-95 transition"
+                >
+                  <UploadSimple size={15} weight="bold" /> Importă
+                </button>
+                <button
+                  onClick={() => { handleSaveJson(); setMenuOpen(false); }}
+                  className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12.5px] font-semibold text-white/85 bg-white/10 hover:bg-white/15 active:scale-95 transition"
+                >
+                  <FileArrowDown size={15} weight="bold" /> Salvează
+                </button>
+              </div>
+            </section>
+
+            {/* Profile */}
+            <section>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">Profil CV</p>
+              <div className="flex items-center gap-2">
+                <select
+                  value={activeProfileId}
+                  onChange={(e) => { switchProfile(e.target.value); setMenuOpen(false); }}
+                  aria-label="Profil CV activ"
+                  className="flex-1 min-w-0 text-[13px] font-medium rounded-xl px-3 py-2.5 bg-white/10 text-white outline-none"
+                >
+                  {profiles.map((p) => <option key={p.id} value={p.id} className="text-zinc-900">{p.name}</option>)}
+                </select>
+                <button onClick={newProfile} aria-label="Creează profil CV nou"
+                  className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center text-white/80 bg-white/10 hover:bg-white/15 active:scale-95 transition">
+                  <Plus size={15} weight="bold" />
+                </button>
+                <button onClick={renameProfile} aria-label="Redenumește profilul activ"
+                  className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center text-white/80 bg-white/10 hover:bg-white/15 active:scale-95 transition">
+                  <PencilSimple size={15} weight="bold" />
+                </button>
+                <button onClick={deleteProfile} aria-label="Șterge profilul activ"
+                  className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center text-white/80 bg-white/10 hover:bg-red-500/25 hover:text-red-300 active:scale-95 transition">
+                  <Trash size={15} weight="bold" />
+                </button>
+              </div>
+            </section>
+
+            {/* Appearance + language */}
+            <section className="flex flex-wrap items-end gap-x-6 gap-y-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">Aspect aplicație</p>
+                <ThemePicker />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">Limba CV-ului</p>
+                <div className="inline-flex items-center rounded-full p-0.5 bg-white/10">
+                  {(["ro", "en"] as const).map((lng) => (
+                    <button key={lng} onClick={() => changeLang(lng)}
+                      className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase transition-all ${
+                        cvLang === lng ? "bg-sky-500 text-white" : "text-white/50 hover:text-white/80"
+                      }`}>
+                      {lng}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      )}
 
       {/* ── Main split ── */}
       <div className="flex flex-1 overflow-hidden min-h-0">
