@@ -199,7 +199,7 @@ const modernS = StyleSheet.create({
   // full-height bar painted on every page, so the sidebar background
   // continues correctly when the CV flows onto page 2+
   sidebarBg: { position: "absolute", top: 0, bottom: 0, left: 0, width: "35%", backgroundColor: "#1e293b" },
-  sidebar:   { width: "35%", paddingTop: 28, paddingBottom: 12, paddingHorizontal: 20 },
+  sidebar:   { width: "35%", paddingTop: 26, paddingBottom: 0, paddingHorizontal: 20 },
   nameFirst: { fontSize: 22, fontWeight: "bold", color: "#38bdf8", lineHeight: 1.1 },
   nameLast:  { fontSize: 22, fontWeight: "bold", color: "#ffffff", lineHeight: 1.1, marginBottom: 14 },
   sideSecTitle: { fontSize: 9, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1.6,
@@ -213,18 +213,18 @@ const modernS = StyleSheet.create({
   langRow:   { flexDirection: "row", justifyContent: "space-between", marginBottom: 3 },
   langName:  { fontSize: 10, color: "#94a3b8" },
   langLvl:   { fontSize: 9, color: "#38bdf8", fontWeight: "bold" },
-  content:   { flex: 1, paddingTop: 28, paddingBottom: 12, paddingHorizontal: 22 },
-  section:   { marginBottom: 14 },
+  content:   { flex: 1, paddingTop: 26, paddingBottom: 0, paddingHorizontal: 22 },
+  section:   { marginBottom: 10 },
   secTitle:  { fontSize: 10, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1.4,
                color: "#0284c7", borderBottomWidth: 2, borderBottomColor: "#e2e8f0",
-               paddingBottom: 3, marginBottom: 8 },
-  summaryTxt: { fontSize: 11, color: "#475569", lineHeight: 1.6 },
-  expItem:   { marginBottom: 10, paddingLeft: 8, borderLeftWidth: 2, borderLeftColor: "#e2e8f0" },
+               paddingBottom: 3, marginBottom: 7 },
+  summaryTxt: { fontSize: 11, color: "#475569", lineHeight: 1.5 },
+  expItem:   { marginBottom: 7, paddingLeft: 8, borderLeftWidth: 2, borderLeftColor: "#e2e8f0" },
   expRow:    { flexDirection: "row", justifyContent: "space-between" },
   expTitle:  { fontSize: 11, fontWeight: "bold", color: "#1e293b", flex: 1 },
   expDate:   { fontSize: 10, color: "#94a3b8", flexShrink: 0, marginLeft: 8 },
   expComp:   { fontSize: 10, color: "#0284c7", fontWeight: "bold", marginTop: 1 },
-  expDesc:   { fontSize: 10, color: "#475569", marginTop: 2, lineHeight: 1.5 },
+  expDesc:   { fontSize: 10, color: "#475569", marginTop: 2, lineHeight: 1.4 },
 });
 
 function ModernPdf({ data, lang }: { data: CVData; lang: CvLang }) {
@@ -298,7 +298,7 @@ function ModernPdf({ data, lang }: { data: CVData; lang: CvLang }) {
             <View style={modernS.section}>
               <Text style={modernS.secTitle}>{L.experience}</Text>
               {experience.map(e => (
-                <View key={e.id} style={{ marginBottom: 10 }}>
+                <View key={e.id} style={{ marginBottom: 7 }}>
                   {e.company && <Text style={[modernS.expComp, { marginBottom: 4 }]}>{e.company}</Text>}
                   {e.positions.map(pos => (
                     <View key={pos.id} wrap={false} style={modernS.expItem}>
