@@ -748,7 +748,7 @@ function App() {
         >
           {/* Tab bar */}
           <div
-            className="flex flex-shrink-0 px-3 pt-2.5 pb-0 gap-0.5"
+            className="flex flex-shrink-0 px-2 lg:px-3 pt-2 lg:pt-2.5 pb-2 lg:pb-0 gap-1 lg:gap-0.5"
             style={{
               background: TAB_BAR_BG[theme.id],
               borderBottom: isDark ? "1px solid rgba(255,255,255,0.04)" : "1px solid rgba(0,0,0,0.05)",
@@ -761,7 +761,7 @@ function App() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-medium transition-colors rounded-t-lg ${
+                  className={`relative flex-1 flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-1.5 py-2.5 lg:py-2 text-[10px] lg:text-[11px] font-medium transition-colors rounded-xl lg:rounded-t-lg ${
                     active ? theme.tabActiveText : theme.tabInactiveText
                   }`}
                   style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)", transitionDuration: "200ms" }}
@@ -769,7 +769,7 @@ function App() {
                   {active && (
                     <motion.span
                       layoutId="tab-pill"
-                      className="absolute inset-0 rounded-t-lg"
+                      className="absolute inset-0 rounded-xl lg:rounded-t-lg"
                       style={{
                         background: isDark ? "rgba(24,24,27,1)" : "rgba(255,255,255,1)",
                         boxShadow: isDark
@@ -779,8 +779,9 @@ function App() {
                       transition={{ type: "spring", stiffness: 500, damping: 40 }}
                     />
                   )}
-                  <Icon size={12} weight={active ? "bold" : "regular"} className="relative z-10" />
-                  <span className="relative z-10">{tab.label}</span>
+                  <Icon weight={active ? "bold" : "regular"} className="relative z-10 lg:hidden" size={19} />
+                  <Icon weight={active ? "bold" : "regular"} className="relative z-10 hidden lg:block" size={12} />
+                  <span className="relative z-10 leading-none whitespace-nowrap">{tab.label}</span>
                 </button>
               );
             })}
