@@ -60,7 +60,7 @@ export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data }) => {
                 <div key={exp.id || Math.random()} className="break-inside-avoid relative pl-4 border-l-2 border-teal-200">
                   <div className="absolute w-2 h-2 bg-teal-600 rounded-full -left-[5px] top-1"></div>
                   <div className="flex justify-between items-baseline mb-0.5">
-                    <h3 className="font-bold text-gray-900 text-xs">{exp.position}</h3>
+                    <h3 className="font-bold text-gray-900 text-xs">{((exp as any).position || (exp as any).role || (exp as any).jobTitle || (exp as any).positions || "")}</h3>
                     <span className="text-[10px] bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-medium">
                       {exp.startDate} - {exp.current ? 'Prezent' : exp.endDate}
                     </span>

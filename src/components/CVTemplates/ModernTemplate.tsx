@@ -107,7 +107,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ data }) => {
                 {experience.map((exp) => (
                   <div key={exp.id || Math.random()} className="break-inside-avoid">
                     <div className="flex justify-between items-baseline">
-                      <h3 className="font-bold text-slate-900 text-xs">{exp.position}</h3>
+                      <h3 className="font-bold text-slate-900 text-xs">{((exp as any).position || (exp as any).role || (exp as any).jobTitle || (exp as any).positions || "")}</h3>
                       <span className="text-[10px] text-gray-500 font-medium">
                         {exp.startDate} - {exp.current ? 'Prezent' : exp.endDate}
                       </span>

@@ -49,7 +49,7 @@ export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data }) => {
                   {exp.startDate} – {exp.current ? 'Prezent' : exp.endDate}
                 </div>
                 <div className="col-span-3">
-                  <h3 className="font-semibold text-neutral-900">{exp.position}</h3>
+                  <h3 className="font-semibold text-neutral-900">{((exp as any).position || (exp as any).role || (exp as any).jobTitle || (exp as any).positions || "")}</h3>
                   <div className="text-neutral-500 font-medium mb-1">{exp.company}</div>
                   <p className="text-neutral-600 whitespace-pre-line text-justify leading-relaxed">
                     {exp.description}
