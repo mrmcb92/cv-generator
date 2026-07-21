@@ -1,14 +1,15 @@
-import { CvLang } from '@/lib/cvLabels';
 import React from 'react';
 import { CVData } from '@/types/cv';
+import { CvLang } from '@/lib/cvLabels';
 
 interface CreativeTemplateProps {
   data: CVData;
   lang?: CvLang;
 }
 
-export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data, lang }) => {
+export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data }) => {
   const { personal, experience, education, skills, customSections } = data;
+  const fullName = [personal.firstName, personal.lastName].filter(Boolean).join(' ') || 'Nume Prenume';
 
   return (
     <div className="max-w-[210mm] min-h-[297mm] mx-auto bg-white text-gray-800 font-sans text-xs leading-relaxed shadow-sm print:shadow-none print:p-0">
@@ -16,11 +17,13 @@ export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data, lang }
         <div className="flex justify-between items-center gap-6">
           <div className="flex-1">
             <h1 className="text-2xl font-extrabold tracking-wide mb-1">
-              {personal.fullName || 'Nume Prenume'}
+              {fullName}
             </h1>
-            <p className="text-teal-100 text-sm font-medium mb-3">
-              {personal.title || 'Titlu Profesional'}
-            </p>
+            {personal.title && (
+              <p className="text-teal-100 text-sm font-medium mb-3">
+                {personal.title}
+              </p>
+            )}
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-teal-100">
               {personal.email && <span>{personal.email}</span>}
               {personal.phone && <span>• {personal.phone}</span>}
@@ -31,7 +34,7 @@ export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data, lang }
           {personal.photo && (
             <img
               src={personal.photo}
-              alt={personal.fullName}
+              alt={fullName}
               className="w-24 h-24 rounded-lg object-cover border-2 border-teal-300 shadow"
             />
           )}
@@ -52,8 +55,8 @@ export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data, lang }
               Experienţă Profesională
             </h2>
             <div className="space-y-4">
-              {experience.map((exp, index) => (
-                <div key={index} className="break-inside-avoid relative pl-4 border-l-2 border-teal-200">
+              {experience.map((exp) => (
+                <div key={exp.id || Math.random()} className="break-inside-avoid relative pl-4 border-l-2 border-teal-200">
                   <div className="absolute w-2 h-2 bg-teal-600 rounded-full -left-[5px] top-1"></div>
                   <div className="flex justify-between items-baseline mb-0.5">
                     <h3 className="font-bold text-gray-900 text-xs">{exp.position}</h3>
@@ -77,8 +80,8 @@ export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data, lang }
               Educaţie
             </h2>
             <div className="space-y-3">
-              {education.map((edu, index) => (
-                <div key={index} className="break-inside-avoid relative pl-4 border-l-2 border-teal-200">
+              {education.map((edu) => (
+                <div key={edu.id || Math.random()} className="break-inside-avoid relative pl-4 border-l-2 border-teal-200">
                   <div className="absolute w-2 h-2 bg-teal-600 rounded-full -left-[5px] top-1"></div>
                   <div className="flex justify-between items-baseline">
                     <h3 className="font-bold text-gray-900 text-xs">{edu.degree}</h3>
@@ -102,9 +105,9 @@ export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data, lang }
               Competenţe
             </h2>
             <div className="flex flex-wrap gap-2">
-              {skills.map((skill, index) => (
+              {skills.map((skill) => (
                 <span
-                  key={index}
+                  key={skill.id || Math.random()}
                   className="bg-teal-50 text-teal-900 border border-teal-200 px-2.5 py-0.5 rounded-full text-[11px] font-medium"
                 >
                   {typeof skill === 'string' ? skill : skill.name}
@@ -114,8 +117,8 @@ export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data, lang }
           </section>
         )}
 
-        {customSections && customSections.map((section, sIndex) => (
-          <section key={sIndex} className="mb-6 break-inside-avoid">
+        {customSections && customSections.map((section) => (
+          <section key={section.id || Math.random()} className="mb-6 break-inside-avoid">
             <h2 className="text-xs font-bold uppercase tracking-wider text-teal-800 border-b-2 border-teal-600 pb-1 mb-2">
               {section.title}
             </h2>
