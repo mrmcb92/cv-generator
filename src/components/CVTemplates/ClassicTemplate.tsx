@@ -10,6 +10,7 @@ interface ClassicTemplateProps {
 export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ data }) => {
   const { personal, experience, education, skills, customSections } = data;
   const fullName = [personal.firstName, personal.lastName].filter(Boolean).join(' ') || 'Nume Prenume';
+  const jobTitle = (personal as Record<string, any>).title || (personal as Record<string, any>).jobTitle || (personal as Record<string, any>).profession || '';
 
   return (
     <div className="max-w-[210mm] min-h-[297mm] mx-auto bg-white p-[15mm] text-gray-900 font-serif text-sm leading-relaxed shadow-sm print:shadow-none print:p-0">
@@ -17,9 +18,9 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ data }) => {
         <h1 className="text-3xl font-bold uppercase tracking-wider text-gray-900 mb-1">
           {fullName}
         </h1>
-        {personal.title && (
+        {jobTitle && (
           <p className="text-base font-medium text-gray-700 mb-2">
-            {personal.title}
+            {jobTitle}
           </p>
         )}
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-gray-600">

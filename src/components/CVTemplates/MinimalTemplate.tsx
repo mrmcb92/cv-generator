@@ -10,6 +10,7 @@ interface MinimalTemplateProps {
 export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data }) => {
   const { personal, experience, education, skills, customSections } = data;
   const fullName = [personal.firstName, personal.lastName].filter(Boolean).join(' ') || 'Nume Prenume';
+  const jobTitle = (personal as Record<string, any>).title || (personal as Record<string, any>).jobTitle || (personal as Record<string, any>).profession || '';
 
   return (
     <div className="max-w-[210mm] min-h-[297mm] mx-auto bg-white p-[15mm] text-neutral-800 font-sans text-xs leading-relaxed shadow-sm print:shadow-none print:p-0">
@@ -17,9 +18,9 @@ export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data }) => {
         <h1 className="text-3xl font-light text-neutral-900 tracking-tight mb-1">
           {fullName}
         </h1>
-        {personal.title && (
+        {jobTitle && (
           <p className="text-xs font-semibold text-neutral-500 uppercase tracking-widest mb-3">
-            {personal.title}
+            {jobTitle}
           </p>
         )}
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-neutral-500 border-t border-neutral-200 pt-2">

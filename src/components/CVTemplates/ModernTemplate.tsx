@@ -10,6 +10,7 @@ interface ModernTemplateProps {
 export const ModernTemplate: React.FC<ModernTemplateProps> = ({ data }) => {
   const { personal, experience, education, skills, customSections } = data;
   const fullName = [personal.firstName, personal.lastName].filter(Boolean).join(' ') || 'Nume Prenume';
+  const jobTitle = (personal as Record<string, any>).title || (personal as Record<string, any>).jobTitle || (personal as Record<string, any>).profession || '';
 
   return (
     <div className="max-w-[210mm] min-h-[297mm] mx-auto bg-white text-gray-800 font-sans text-xs leading-relaxed shadow-sm print:shadow-none print:p-0 flex">
@@ -81,9 +82,9 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ data }) => {
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">
               {fullName}
             </h1>
-            {personal.title && (
+            {jobTitle && (
               <p className="text-sm font-semibold text-indigo-600">
-                {personal.title}
+                {jobTitle}
               </p>
             )}
           </header>

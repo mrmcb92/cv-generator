@@ -10,6 +10,7 @@ interface CreativeTemplateProps {
 export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data }) => {
   const { personal, experience, education, skills, customSections } = data;
   const fullName = [personal.firstName, personal.lastName].filter(Boolean).join(' ') || 'Nume Prenume';
+  const jobTitle = (personal as Record<string, any>).title || (personal as Record<string, any>).jobTitle || (personal as Record<string, any>).profession || '';
 
   return (
     <div className="max-w-[210mm] min-h-[297mm] mx-auto bg-white text-gray-800 font-sans text-xs leading-relaxed shadow-sm print:shadow-none print:p-0">
@@ -19,9 +20,9 @@ export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data }) => {
             <h1 className="text-2xl font-extrabold tracking-wide mb-1">
               {fullName}
             </h1>
-            {personal.title && (
+            {jobTitle && (
               <p className="text-teal-100 text-sm font-medium mb-3">
-                {personal.title}
+                {jobTitle}
               </p>
             )}
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-teal-100">
