@@ -43,7 +43,7 @@ export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data }) => {
             Experienţă
           </h2>
           <div className="space-y-5">
-            {experience.map((exp) => (
+            {experience.map((exp: any) => (
               <div key={exp.id || Math.random()} className="break-inside-avoid grid grid-cols-4 gap-4">
                 <div className="col-span-1 text-[11px] text-neutral-400 font-medium">
                   {exp.startDate} – {exp.current ? 'Prezent' : exp.endDate}
@@ -67,7 +67,7 @@ export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data }) => {
             Educaţie
           </h2>
           <div className="space-y-4">
-            {education.map((edu) => (
+            {education.map((edu: any) => (
               <div key={edu.id || Math.random()} className="break-inside-avoid grid grid-cols-4 gap-4">
                 <div className="col-span-1 text-[11px] text-neutral-400 font-medium">
                   {edu.startDate} – {edu.endDate}
@@ -91,7 +91,7 @@ export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data }) => {
             Competenţe
           </h2>
           <div className="flex flex-wrap gap-2">
-            {skills.map((skill) => (
+            {skills.map((skill: any) => (
               <span key={skill.id || Math.random()} className="text-neutral-700 bg-neutral-100 px-2.5 py-1 rounded-sm text-[11px]">
                 {typeof skill === 'string' ? skill : skill.name}
               </span>
@@ -100,7 +100,7 @@ export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data }) => {
         </section>
       )}
 
-      {customSections && customSections.map((section) => (
+      {customSections && customSections.map((section: any) => (
         <section key={section.id || Math.random()} className="mb-8 break-inside-avoid">
           <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-3">
             {section.title}

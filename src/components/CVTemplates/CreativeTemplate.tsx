@@ -56,7 +56,7 @@ export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data }) => {
               Experienţă Profesională
             </h2>
             <div className="space-y-4">
-              {experience.map((exp) => (
+              {experience.map((exp: any) => (
                 <div key={exp.id || Math.random()} className="break-inside-avoid relative pl-4 border-l-2 border-teal-200">
                   <div className="absolute w-2 h-2 bg-teal-600 rounded-full -left-[5px] top-1"></div>
                   <div className="flex justify-between items-baseline mb-0.5">
@@ -81,7 +81,7 @@ export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data }) => {
               Educaţie
             </h2>
             <div className="space-y-3">
-              {education.map((edu) => (
+              {education.map((edu: any) => (
                 <div key={edu.id || Math.random()} className="break-inside-avoid relative pl-4 border-l-2 border-teal-200">
                   <div className="absolute w-2 h-2 bg-teal-600 rounded-full -left-[5px] top-1"></div>
                   <div className="flex justify-between items-baseline">
@@ -106,7 +106,7 @@ export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data }) => {
               Competenţe
             </h2>
             <div className="flex flex-wrap gap-2">
-              {skills.map((skill) => (
+              {skills.map((skill: any) => (
                 <span
                   key={skill.id || Math.random()}
                   className="bg-teal-50 text-teal-900 border border-teal-200 px-2.5 py-0.5 rounded-full text-[11px] font-medium"
@@ -118,7 +118,7 @@ export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data }) => {
           </section>
         )}
 
-        {customSections && customSections.map((section) => (
+        {customSections && customSections.map((section: any) => (
           <section key={section.id || Math.random()} className="mb-6 break-inside-avoid">
             <h2 className="text-xs font-bold uppercase tracking-wider text-teal-800 border-b-2 border-teal-600 pb-1 mb-2">
               {section.title}

@@ -46,7 +46,7 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ data }) => {
             Experienţă Profesională
           </h2>
           <div className="space-y-4">
-            {experience.map((exp) => (
+            {experience.map((exp: any) => (
               <div key={exp.id || Math.random()} className="break-inside-avoid">
                 <div className="flex justify-between items-baseline mb-1">
                   <h3 className="font-bold text-gray-900">{((exp as any).position || (exp as any).role || (exp as any).jobTitle || (exp as any).positions || "")}</h3>
@@ -70,7 +70,7 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ data }) => {
             Educaţie şi Formare
           </h2>
           <div className="space-y-3">
-            {education.map((edu) => (
+            {education.map((edu: any) => (
               <div key={edu.id || Math.random()} className="break-inside-avoid">
                 <div className="flex justify-between items-baseline mb-0.5">
                   <h3 className="font-bold text-gray-900">{edu.degree}</h3>
@@ -94,7 +94,7 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ data }) => {
             Competenţe
           </h2>
           <div className="flex flex-wrap gap-1.5">
-            {skills.map((skill) => (
+            {skills.map((skill: any) => (
               <span key={skill.id || Math.random()} className="text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded border border-gray-200">
                 {typeof skill === 'string' ? skill : skill.name}
               </span>
@@ -103,7 +103,7 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ data }) => {
         </section>
       )}
 
-      {customSections && customSections.map((section) => (
+      {customSections && customSections.map((section: any) => (
         <section key={section.id || Math.random()} className="mb-6 break-inside-avoid">
           <h2 className="text-xs font-bold uppercase tracking-widest text-gray-800 border-b border-gray-300 pb-1 mb-2">
             {section.title}

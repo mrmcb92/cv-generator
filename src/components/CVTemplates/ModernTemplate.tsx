@@ -62,7 +62,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ data }) => {
                 Competenţe
               </h2>
               <div className="flex flex-wrap gap-1.5">
-                {skills.map((skill) => (
+                {skills.map((skill: any) => (
                   <span
                     key={skill.id || Math.random()}
                     className="bg-slate-800 text-slate-200 text-[10px] px-2 py-0.5 rounded border border-slate-700"
@@ -104,7 +104,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ data }) => {
                 Experienţă Profesională
               </h2>
               <div className="space-y-4">
-                {experience.map((exp) => (
+                {experience.map((exp: any) => (
                   <div key={exp.id || Math.random()} className="break-inside-avoid">
                     <div className="flex justify-between items-baseline">
                       <h3 className="font-bold text-slate-900 text-xs">{((exp as any).position || (exp as any).role || (exp as any).jobTitle || (exp as any).positions || "")}</h3>
@@ -128,7 +128,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ data }) => {
                 Educaţie
               </h2>
               <div className="space-y-3">
-                {education.map((edu) => (
+                {education.map((edu: any) => (
                   <div key={edu.id || Math.random()} className="break-inside-avoid">
                     <div className="flex justify-between items-baseline">
                       <h3 className="font-bold text-slate-900 text-xs">{edu.degree}</h3>
@@ -146,7 +146,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ data }) => {
             </section>
           )}
 
-          {customSections && customSections.map((section) => (
+          {customSections && customSections.map((section: any) => (
             <section key={section.id || Math.random()} className="mb-6 break-inside-avoid">
               <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-900 border-b-2 border-indigo-600 pb-1 mb-2 inline-block">
                 {section.title}
