@@ -1,11 +1,13 @@
+import { CvLang } from '@/lib/cvLabels';
 import React from 'react';
 import { CVData } from '@/types/cv';
 
 interface CreativeTemplateProps {
   data: CVData;
+  lang?: CvLang;
 }
 
-export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data }) => {
+export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data, lang }) => {
   const { personal, experience, education, skills, customSections } = data;
 
   return (

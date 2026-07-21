@@ -1,11 +1,13 @@
+import { CvLang } from '@/lib/cvLabels';
 import React from 'react';
 import { CVData } from '@/types/cv';
 
 interface ModernTemplateProps {
   data: CVData;
+  lang?: CvLang;
 }
 
-export const ModernTemplate: React.FC<ModernTemplateProps> = ({ data }) => {
+export const ModernTemplate: React.FC<ModernTemplateProps> = ({ data, lang }) => {
   const { personal, experience, education, skills, customSections } = data;
 
   return (

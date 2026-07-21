@@ -1,11 +1,13 @@
+import { CvLang } from '@/lib/cvLabels';
 import React from 'react';
 import { CVData } from '@/types/cv';
 
 interface MinimalTemplateProps {
   data: CVData;
+  lang?: CvLang;
 }
 
-export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data }) => {
+export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data, lang }) => {
   const { personal, experience, education, skills, customSections } = data;
 
   return (
