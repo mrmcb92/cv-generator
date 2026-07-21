@@ -3,10 +3,10 @@
 import { CVData } from "@/types/cv";
 import { TemplateId } from "@/types/template";
 import { CvLang } from "@/lib/cvLabels";
-import ClassicTemplate  from "./CVTemplates/ClassicTemplate";
-import ModernTemplate   from "./CVTemplates/ModernTemplate";
-import MinimalTemplate  from "./CVTemplates/MinimalTemplate";
-import CreativeTemplate from "./CVTemplates/CreativeTemplate";
+import { ClassicTemplate } from "./CVTemplates/ClassicTemplate";
+import { ModernTemplate } from "./CVTemplates/ModernTemplate";
+import { MinimalTemplate } from "./CVTemplates/MinimalTemplate";
+import { CreativeTemplate } from "./CVTemplates/CreativeTemplate";
 
 interface Props {
   data: CVData;
