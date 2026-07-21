@@ -1,136 +1,107 @@
-"use client";
+import React from 'react';
+import { CVData } from '@/types/cv';
 
-import { CVData } from "@/types/cv";
+interface MinimalTemplateProps {
+  data: CVData;
+}
 
-import { CV_LABELS, CvLang, fmtDate } from "@/lib/cvLabels";
-
-export default function MinimalTemplate({ data, lang = "ro" }: { data: CVData; lang?: CvLang }) {
-  const { personal: p, experience, education, skills, languages, drivingLicenses, customSections } = data;
-  const L = CV_LABELS[lang];
-  const fmt = (d: string) => fmtDate(d, lang);
-  const name = `${p.firstName} ${p.lastName}`.trim() || "Nume Prenume";
-
-  const contactParts = [p.email, p.phone, p.location, p.website, p.linkedin].filter(Boolean);
+export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data }) => {
+  const { personal, experience, education, skills, customSections } = data;
 
   return (
-    <div
-      id="cv-preview"
-      className="bg-white w-full max-w-[210mm] mx-auto font-sans text-gray-800"
-      style={{ minHeight: "297mm", fontSize: "11px", lineHeight: "1.6", padding: "40px 48px" }}
-    >
-      {/* Name */}
-      <h1 className="text-[32px] font-light tracking-[-0.02em] text-zinc-900 leading-none">{name}</h1>
-
-      {/* Contact line */}
-      {contactParts.length > 0 && (
-        <p className="mt-2 text-[10.5px] text-zinc-400 tracking-wide">
-          {contactParts.join("  ·  ")}
+    <div className="max-w-[210mm] min-h-[297mm] mx-auto bg-white p-[15mm] text-neutral-800 font-sans text-xs leading-relaxed shadow-sm print:shadow-none print:p-0">
+      <header className="mb-8">
+        <h1 className="text-3xl font-light text-neutral-900 tracking-tight mb-1">
+          {personal.fullName || 'Nume Prenume'}
+        </h1>
+        <p className="text-xs font-semibold text-neutral-500 uppercase tracking-widest mb-3">
+          {personal.title || 'Titlu Profesional'}
         </p>
-      )}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-neutral-500 border-t border-neutral-200 pt-2">
+          {personal.email && <span>{personal.email}</span>}
+          {personal.phone && <span>{personal.phone}</span>}
+          {personal.location && <span>{personal.location}</span>}
+          {personal.website && <span>{personal.website}</span>}
+        </div>
+      </header>
 
-      {/* Thin rule */}
-      <div className="mt-5 mb-6 h-px bg-zinc-200" />
-
-      {p.summary && (
-        <section className="mb-6">
-          <p className="text-[11px] text-zinc-600 leading-relaxed max-w-[90%]">{p.summary}</p>
+      {personal.summary && (
+        <section className="mb-8">
+          <p className="text-neutral-700 leading-relaxed text-justify">{personal.summary}</p>
         </section>
       )}
 
-      {experience.length > 0 && (
-        <section className="mb-6">
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-3">{L.experienceShort}</h2>
-          <div className="space-y-4">
-            {experience.map(e => (
-              <div key={e.id}>
-                {e.company && <p className="font-semibold text-[11.5px] text-zinc-900 mb-1">{e.company}</p>}
-                <div className="space-y-3 pl-3 border-l border-zinc-200">
-                  {e.positions.map(pos => (
-                    <div key={pos.id} className="grid grid-cols-[1fr_auto] gap-x-6">
-                      <div>
-                        <p className="font-medium text-[11px] text-zinc-700">{pos.title}</p>
-                        {pos.description && <p className="mt-1 text-[10.5px] text-zinc-600 leading-relaxed">{pos.description}</p>}
-                      </div>
-                      <p className="text-[10px] text-zinc-400 whitespace-nowrap pt-0.5 text-right">
-                        {fmt(pos.startDate)}<br/>{pos.current ? L.present : fmt(pos.endDate)}
-                      </p>
-                    </div>
-                  ))}
+      {experience && experience.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-4">
+            Experienţă
+          </h2>
+          <div className="space-y-5">
+            {experience.map((exp, index) => (
+              <div key={index} className="break-inside-avoid grid grid-cols-4 gap-4">
+                <div className="col-span-1 text-[11px] text-neutral-400 font-medium">
+                  {exp.startDate} – {exp.current ? 'Prezent' : exp.endDate}
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {education.length > 0 && (
-        <section className="mb-6">
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-3">{L.education}</h2>
-          <div className="space-y-3">
-            {education.map(e => (
-              <div key={e.id} className="grid grid-cols-[1fr_auto] gap-x-6">
-                <div>
-                  <p className="font-semibold text-[11.5px] text-zinc-900">
-                    {e.degree}{e.field && `, ${e.field}`}
+                <div className="col-span-3">
+                  <h3 className="font-semibold text-neutral-900">{exp.position}</h3>
+                  <div className="text-neutral-500 font-medium mb-1">{exp.company}</div>
+                  <p className="text-neutral-600 whitespace-pre-line text-justify leading-relaxed">
+                    {exp.description}
                   </p>
-                  {e.institution && <p className="text-[10.5px] text-zinc-500">{e.institution}</p>}
                 </div>
-                <p className="text-[10px] text-zinc-400 whitespace-nowrap pt-0.5 text-right">
-                  {fmt(e.startDate)}<br/>{fmt(e.endDate)}
-                </p>
               </div>
             ))}
           </div>
         </section>
       )}
 
-      {(skills.length > 0 || languages.length > 0) && (
-        <section>
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-3">{L.skillsAndLangs}</h2>
-          <div className="flex flex-wrap gap-x-8 gap-y-1">
-            {skills.map(s => (
-              <span key={s.id} className="text-[11px] text-zinc-700">
-                {s.name} <span className="text-zinc-400">— {s.level}</span>
-              </span>
+      {education && education.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-4">
+            Educaţie
+          </h2>
+          <div className="space-y-4">
+            {education.map((edu, index) => (
+              <div key={index} className="break-inside-avoid grid grid-cols-4 gap-4">
+                <div className="col-span-1 text-[11px] text-neutral-400 font-medium">
+                  {edu.startDate} – {edu.endDate}
+                </div>
+                <div className="col-span-3">
+                  <h3 className="font-semibold text-neutral-900">{edu.degree}</h3>
+                  <div className="text-neutral-500 font-medium">{edu.institution}</div>
+                  {edu.description && (
+                    <p className="text-neutral-600 mt-1">{edu.description}</p>
+                  )}
+                </div>
+              </div>
             ))}
-            {languages.map(l => (
-              <span key={l.id} className="text-[11px] text-zinc-700">
-                {l.name} <span className="text-zinc-400">— {l.level}</span>
+          </div>
+        </section>
+      )}
+
+      {skills && skills.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-3">
+            Competenţe
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {skills.map((skill, index) => (
+              <span key={index} className="text-neutral-700 bg-neutral-100 px-2.5 py-1 rounded-sm text-[11px]">
+                {typeof skill === 'string' ? skill : skill.name}
               </span>
             ))}
           </div>
         </section>
       )}
 
-      {customSections.filter(cs => cs.title && cs.items.length > 0).map(cs => (
-        <section key={cs.id} className="mt-6">
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-3">{cs.title}</h2>
-          <div className="space-y-3">
-            {cs.items.map(it => (
-              <div key={it.id} className="grid grid-cols-[1fr_auto] gap-x-6">
-                <div>
-                  <p className="font-medium text-[11px] text-zinc-700">{it.name}{it.subtitle && <span className="text-zinc-500">, {it.subtitle}</span>}</p>
-                  {it.description && <p className="mt-1 text-[10.5px] text-zinc-600 leading-relaxed">{it.description}</p>}
-                </div>
-                {it.date && <p className="text-[10px] text-zinc-400 whitespace-nowrap pt-0.5 text-right">{it.date}</p>}
-              </div>
-            ))}
-          </div>
+      {customSections && customSections.map((section, sIndex) => (
+        <section key={sIndex} className="mb-8 break-inside-avoid">
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-3">
+            {section.title}
+          </h2>
+          <p className="text-neutral-700 whitespace-pre-line leading-relaxed">{section.content}</p>
         </section>
       ))}
-
-      {drivingLicenses.length > 0 && (
-        <section className="mt-6">
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 mb-3">{L.driving}</h2>
-          <div className="flex flex-wrap gap-x-8 gap-y-1">
-            {drivingLicenses.map(d => (
-              <span key={d.id} className="text-[11px] text-zinc-700">
-                {L.category} {d.category}{d.year && <span className="text-zinc-400"> — {d.year}</span>}
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
-}
+};

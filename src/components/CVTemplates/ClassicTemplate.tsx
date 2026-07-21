@@ -1,158 +1,110 @@
-"use client";
+import React from 'react';
+import { CVData } from '@/types/cv';
 
-import { CVData } from "@/types/cv";
-import { EnvelopeSimple as Mail, Phone, MapPin, Globe, LinkSimple as Link2 } from "@phosphor-icons/react";
+interface ClassicTemplateProps {
+  data: CVData;
+}
 
-import { CV_LABELS, CvLang, fmtDate } from "@/lib/cvLabels";
-
-export default function ClassicTemplate({ data, lang = "ro" }: { data: CVData; lang?: CvLang }) {
-  const { personal: p, experience, education, skills, languages, drivingLicenses, customSections } = data;
-  const name = `${p.firstName} ${p.lastName}`.trim() || "Nume Prenume";
-  const L = CV_LABELS[lang];
-  const fmt = (d: string) => fmtDate(d, lang);
+export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ data }) => {
+  const { personal, experience, education, skills, customSections } = data;
 
   return (
-    <div
-      id="cv-preview"
-      className="bg-white w-full max-w-[210mm] mx-auto font-sans text-gray-800"
-      style={{ minHeight: "297mm", fontSize: "11px", lineHeight: "1.5" }}
-    >
-      {/* Header */}
-      <div className="bg-slate-800 text-white px-8 py-7 flex items-center justify-between gap-6">
-        <div>
-          <h1 className="text-[28px] font-bold tracking-wide leading-tight">{name}</h1>
-          <div className="flex flex-wrap gap-x-5 gap-y-1 mt-3 text-slate-300 text-[11px]">
-            {p.email    && <span className="flex items-center gap-1"><Mail size={11}/>{p.email}</span>}
-            {p.phone    && <span className="flex items-center gap-1"><Phone size={11}/>{p.phone}</span>}
-            {p.location && <span className="flex items-center gap-1"><MapPin size={11}/>{p.location}</span>}
-            {p.website  && <span className="flex items-center gap-1"><Globe size={11}/>{p.website}</span>}
-            {p.linkedin && <span className="flex items-center gap-1"><Link2 size={11}/>{p.linkedin}</span>}
-          </div>
+    <div className="max-w-[210mm] min-h-[297mm] mx-auto bg-white p-[15mm] text-gray-900 font-serif text-sm leading-relaxed shadow-sm print:shadow-none print:p-0">
+      <header className="border-b-2 border-gray-800 pb-4 mb-6 text-center">
+        <h1 className="text-3xl font-bold uppercase tracking-wider text-gray-900 mb-1">
+          {personal.fullName || 'Nume Prenume'}
+        </h1>
+        <p className="text-base font-medium text-gray-700 mb-2">
+          {personal.title || 'Titlu Profesional'}
+        </p>
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-gray-600">
+          {personal.email && <span>{personal.email}</span>}
+          {personal.phone && <span>• {personal.phone}</span>}
+          {personal.location && <span>• {personal.location}</span>}
+          {personal.website && <span>• {personal.website}</span>}
         </div>
-        {p.photo && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.photo} alt="" className="w-[72px] h-[72px] rounded-full object-cover ring-2 ring-slate-600 flex-shrink-0" />
-        )}
-      </div>
+      </header>
 
-      <div className="px-8 py-6 space-y-5">
-        {p.summary && (
-          <section>
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-2">{L.profile}</h2>
-            <p className="text-[11px] text-gray-700 leading-relaxed">{p.summary}</p>
-          </section>
-        )}
+      {personal.summary && (
+        <section className="mb-6">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-gray-800 border-b border-gray-300 pb-1 mb-2">
+            Profil Profesional
+          </h2>
+          <p className="text-justify text-gray-700 leading-normal">{personal.summary}</p>
+        </section>
+      )}
 
-        {experience.length > 0 && (
-          <section>
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-3">{L.experience}</h2>
-            <div className="space-y-4">
-              {experience.map(e => (
-                <div key={e.id}>
-                  {e.company && <p className="font-bold text-[11px] text-slate-800 mb-1.5">{e.company}</p>}
-                  <div className="space-y-2.5 pl-3 border-l-2 border-slate-100">
-                    {e.positions.map(pos => (
-                      <div key={pos.id}>
-                        <div className="flex justify-between items-baseline">
-                          <span className="font-semibold text-[11px]">{pos.title}</span>
-                          <span className="text-[10px] text-slate-400 whitespace-nowrap ml-4">
-                            {fmt(pos.startDate)} – {pos.current ? L.present : fmt(pos.endDate)}
-                          </span>
-                        </div>
-                        {pos.description && <p className="text-[10.5px] text-gray-600 mt-0.5 leading-relaxed">{pos.description}</p>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {education.length > 0 && (
-          <section>
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-3">{L.education}</h2>
-            <div className="space-y-2.5">
-              {education.map(e => (
-                <div key={e.id} className="flex justify-between items-baseline">
-                  <div>
-                    <span className="font-semibold text-[11px]">{e.degree}{e.field && ` ${L.inWord} ${e.field}`}</span>
-                    {e.institution && <span className="text-slate-500 text-[11px] ml-1.5">· {e.institution}</span>}
-                  </div>
-                  <span className="text-[10px] text-slate-400 whitespace-nowrap ml-4">
-                    {fmt(e.startDate)} – {fmt(e.endDate)}
+      {experience && experience.length > 0 && (
+        <section className="mb-6">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-gray-800 border-b border-gray-300 pb-1 mb-3">
+            Experienţă Profesională
+          </h2>
+          <div className="space-y-4">
+            {experience.map((exp, index) => (
+              <div key={index} className="break-inside-avoid">
+                <div className="flex justify-between items-baseline mb-1">
+                  <h3 className="font-bold text-gray-900">{exp.position}</h3>
+                  <span className="text-xs text-gray-600 font-medium">
+                    {exp.startDate} - {exp.current ? 'Prezent' : exp.endDate}
                   </span>
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {(skills.length > 0 || languages.length > 0) && (
-          <div className="grid grid-cols-2 gap-6">
-            {skills.length > 0 && (
-              <section>
-                <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-2">{L.skills}</h2>
-                <div className="space-y-1">
-                  {skills.map(s => (
-                    <div key={s.id} className="flex justify-between text-[11px]">
-                      <span>{s.name}</span>
-                      <span className="text-slate-400">{s.level}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-            {languages.length > 0 && (
-              <section>
-                <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-2">{L.languages}</h2>
-                <div className="space-y-1">
-                  {languages.map(l => (
-                    <div key={l.id} className="flex justify-between text-[11px]">
-                      <span>{l.name}</span>
-                      <span className="text-slate-400">{l.level}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
+                <div className="text-xs font-semibold text-gray-700 mb-1">{exp.company}</div>
+                <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line text-justify">
+                  {exp.description}
+                </p>
+              </div>
+            ))}
           </div>
-        )}
+        </section>
+      )}
 
-        {customSections.filter(cs => cs.title && cs.items.length > 0).map(cs => (
-          <section key={cs.id}>
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-3">{cs.title}</h2>
-            <div className="space-y-2.5">
-              {cs.items.map(it => (
-                <div key={it.id}>
-                  <div className="flex justify-between items-baseline">
-                    <div>
-                      <span className="font-semibold text-[11px]">{it.name}</span>
-                      {it.subtitle && <span className="text-slate-500 text-[11px] ml-1.5">· {it.subtitle}</span>}
-                    </div>
-                    {it.date && <span className="text-[10px] text-slate-400 whitespace-nowrap ml-4">{it.date}</span>}
-                  </div>
-                  {it.description && <p className="text-[10.5px] text-gray-600 mt-0.5 leading-relaxed">{it.description}</p>}
+      {education && education.length > 0 && (
+        <section className="mb-6">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-gray-800 border-b border-gray-300 pb-1 mb-3">
+            Educaţie şi Formare
+          </h2>
+          <div className="space-y-3">
+            {education.map((edu, index) => (
+              <div key={index} className="break-inside-avoid">
+                <div className="flex justify-between items-baseline mb-0.5">
+                  <h3 className="font-bold text-gray-900">{edu.degree}</h3>
+                  <span className="text-xs text-gray-600 font-medium">
+                    {edu.startDate} - {edu.endDate}
+                  </span>
                 </div>
-              ))}
-            </div>
-          </section>
-        ))}
+                <div className="text-xs font-semibold text-gray-700">{edu.institution}</div>
+                {edu.description && (
+                  <p className="text-xs text-gray-600 mt-0.5">{edu.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
-        {drivingLicenses.length > 0 && (
-          <section>
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 border-b border-slate-200 pb-1 mb-2">{L.driving}</h2>
-            <div className="flex flex-wrap gap-x-5 gap-y-1">
-              {drivingLicenses.map(d => (
-                <span key={d.id} className="text-[11px]">
-                  <span className="font-semibold">{L.category} {d.category}</span>
-                  {d.year && <span className="text-slate-400"> · {d.year}</span>}
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
-      </div>
+      {skills && skills.length > 0 && (
+        <section className="mb-6">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-gray-800 border-b border-gray-300 pb-1 mb-2">
+            Competenţe
+          </h2>
+          <div className="flex flex-wrap gap-1.5">
+            {skills.map((skill, index) => (
+              <span key={index} className="text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded border border-gray-200">
+                {typeof skill === 'string' ? skill : skill.name}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {customSections && customSections.map((section, sIndex) => (
+        <section key={sIndex} className="mb-6 break-inside-avoid">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-gray-800 border-b border-gray-300 pb-1 mb-2">
+            {section.title}
+          </h2>
+          <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">{section.content}</p>
+        </section>
+      ))}
     </div>
   );
-}
+};
