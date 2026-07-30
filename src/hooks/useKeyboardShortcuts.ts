@@ -1,11 +1,15 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface ShortcutMap {
   [key: string]: () => void;
 }
 
 export function useKeyboardShortcuts(shortcuts: ShortcutMap) {
+  // Store latest callbacks in a ref so the effect doesn't re-run on every render
+  const shortcutsRef = useRef<ShortcutMap>(shortcuts);
+  shortcutsRef.current = shortcuts;
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       // Don't fire inside inputs, textareas, selects, or contenteditable
@@ -20,12 +24,13 @@ export function useKeyboardShortcuts(shortcuts: ShortcutMap) {
       const mod = e.metaKey || e.ctrlKey;
       const key = `${mod ? "Ctrl+" : ""}${e.shiftKey ? "Shift+" : ""}${e.key.toUpperCase()}`;
 
-      if (shortcuts[key]) {
+      const fn = shortcutsRef.current[key];
+      if (fn) {
         e.preventDefault();
-        shortcuts[key]();
+        fn();
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [shortcuts]);
+  }, []); // empty deps — only mount/unmount
 }

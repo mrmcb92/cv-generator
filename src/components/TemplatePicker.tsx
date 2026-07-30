@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { cvTemplates, TemplateId } from "@/types/template";
 
-// Mini thumbnail previews for each template
+// Mini thumbnail previews for each template — sized via parent container's w-full h-full
 const TEMPLATE_THUMBS: Record<TemplateId, React.ReactNode> = {
   classic: (
     <svg viewBox="0 0 40 52" className="w-full h-full">
@@ -147,7 +147,7 @@ const TEMPLATE_THUMBS: Record<TemplateId, React.ReactNode> = {
   ),
 };
 
-// Larger preview for hover tooltip (~3x scale)
+// Larger preview for hover tooltip (~3x scale) — explicit width/height for the overlay
 const TEMPLATE_PREVIEW_HOVER: Record<TemplateId, React.ReactNode> = {
   classic: (
     <svg viewBox="0 0 40 52" width={240} height={312}>
@@ -242,7 +242,7 @@ const TEMPLATE_PREVIEW_HOVER: Record<TemplateId, React.ReactNode> = {
     </svg>
   ),
   academic: (
-    <svg viewBox="0 0 40 52" className="w-full h-full">
+    <svg viewBox="0 0 40 52" width={240} height={312}>
       <rect width="40" height="52" fill="white"/>
       <rect width="40" height="14" fill="#6d28d9"/>
       <rect x="4" y="3" width="16" height="2.5" rx="1" fill="white" opacity="0.9"/>
@@ -264,7 +264,7 @@ const TEMPLATE_PREVIEW_HOVER: Record<TemplateId, React.ReactNode> = {
     </svg>
   ),
   executive: (
-    <svg viewBox="0 0 40 52" className="w-full h-full">
+    <svg viewBox="0 0 40 52" width={240} height={312}>
       <rect width="40" height="52" fill="white"/>
       <rect width="40" height="2" fill="#b91c1c"/>
       <rect x="4" y="5" width="22" height="3.5" rx="0.8" fill="#1e293b" opacity="0.9"/>

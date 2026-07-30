@@ -451,19 +451,18 @@ function App() {
               </span>
             </button>
           ))}
-          {/* Export RO+EN shortcut */}
+          {/* Export RO+EN shortcut — exportă PDF în ambele limbi cu delay între ele */}
           <button
             onClick={async () => {
               setExporting("pdf");
               try {
                 const { exportToPdf } = await import("@/lib/exportPdf");
-                if (cvLang === "ro") {
-                  await exportToPdf(cv.personal.lastName, cv, templateId, "ro");
-                  await exportToPdf(cv.personal.lastName, cv, templateId, "en");
-                } else {
-                  await exportToPdf(cv.personal.lastName, cv, templateId, "en");
-                  await exportToPdf(cv.personal.lastName, cv, templateId, "ro");
-                }
+                const first = cvLang === "ro" ? "ro" : "en";
+                const second = first === "ro" ? "en" : "ro";
+                await exportToPdf(cv.personal.lastName, cv, templateId, first);
+                // Delay between downloads so the browser doesn't block the second
+                await new Promise((r) => setTimeout(r, 500));
+                await exportToPdf(cv.personal.lastName, cv, templateId, second);
                 showToast("PDF exportat în RO și EN");
               } catch {
                 showToast("Exportul bilingv a eșuat", "error");
