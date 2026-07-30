@@ -90,6 +90,11 @@ export default function PersonalSection({ data, onChange, theme }: Props) {
           <DBInput value={data.lastName} onChange={(v) => update("lastName", v)} placeholder="Popescu" theme={theme} />
         </motion.div>
 
+        <motion.div variants={ITEM} className="col-span-2">
+          <label className={labelClass}>Titlu profesional</label>
+          <DBInput value={data.title} onChange={(v) => update("title", v)} placeholder="ex: Software Engineer, Designer Grafic" theme={theme} />
+        </motion.div>
+
         <motion.div variants={ITEM}>
           <label className={labelClass}><span className="flex items-center gap-1"><EnvelopeSimple size={10} weight="bold" />Email</span></label>
           <DBInput type="email" value={data.email} onChange={(v) => update("email", v)} placeholder="ion.popescu@email.com" theme={theme}

@@ -11,8 +11,13 @@ import EducationSection from "@/components/CVForm/EducationSection";
 import SkillsSection    from "@/components/CVForm/SkillsSection";
 import CustomSectionsForm from "@/components/CVForm/CustomSectionsForm";
 import CVPreview        from "@/components/CVPreview";
+import ThemePicker      from "@/components/ThemePicker";
+import TemplatePicker   from "@/components/TemplatePicker";
+import ToastStack       from "@/components/ToastStack";
+import { useToast }     from "@/hooks/useToast";
 import { cvTemplates, TemplateId } from "@/types/template";
 import { CvLang } from "@/lib/cvLabels";
+import { themes, ThemeId } from "@/types/theme";
 import {
   FilePdf, FileDoc, FileHtml, FileArrowDown, UploadSimple,
   User, Briefcase, GraduationCap, Star, Stack,
@@ -24,8 +29,6 @@ const EXPORTS = [
   { type: "docx", label: "Word", Icon: FileDoc,  color: "bg-sky-500/90 hover:bg-sky-500" },
   { type: "html", label: "HTML", Icon: FileHtml, color: "bg-emerald-500/90 hover:bg-emerald-500" },
 ] as const;
-import { themes, ThemeId } from "@/types/theme";
-import { useTheme as useAppTheme } from "@/context/ThemeContext";
 
 type Tab = "personal" | "experience" | "education" | "skills" | "other";
 
@@ -36,14 +39,6 @@ const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: "skills",     label: "Competențe", icon: Star },
   { id: "other",      label: "Altele",     icon: Stack },
 ];
-
-const THEME_LABELS: Record<ThemeId, string> = {
-  clean: "Light", dark: "Dark", violet: "Violet", warm: "Warm",
-};
-
-const THEME_ACCENTS: Record<ThemeId, string> = {
-  clean: "#38bdf8", dark: "#22d3ee", violet: "#8b5cf6", warm: "#f59e0b",
-};
 
 // Per-theme right-panel background — makes Light vs Warm visually distinct
 const RIGHT_PANEL_BG: Record<ThemeId, string> = {
@@ -69,214 +64,8 @@ const TAB_BAR_BG: Record<ThemeId, string> = {
   warm:   "rgba(245,240,230,0.95)",
 };
 
-function ThemePicker() {
-  const { themeId, setTheme } = useAppTheme();
-  return (
-    <div className="flex items-center gap-1 bg-white/8 rounded-full p-0.5">
-      {(Object.keys(themes) as ThemeId[]).map((id) => (
-        <button
-          key={id}
-          onClick={() => setTheme(id)}
-          className={`relative flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition-all duration-300 ${
-            themeId === id ? "text-white" : "text-white/50 hover:text-white/80"
-          }`}
-          style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)" }}
-        >
-          {themeId === id && (
-            <motion.span
-              layoutId="theme-active"
-              className="absolute inset-0 rounded-full bg-white/12 ring-1 ring-white/20"
-              transition={{ type: "spring", stiffness: 400, damping: 35 }}
-            />
-          )}
-          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: THEME_ACCENTS[id] }} />
-          <span className="relative z-10">{THEME_LABELS[id]}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// Mini thumbnail previews for each template
-const TEMPLATE_THUMBS: Record<TemplateId, React.ReactNode> = {
-  classic: (
-    <svg viewBox="0 0 40 52" className="w-full h-full">
-      <rect width="40" height="52" fill="white"/>
-      <rect width="40" height="12" fill="#1e293b"/>
-      <rect x="4" y="3" width="18" height="2.5" rx="1" fill="white" opacity="0.9"/>
-      <rect x="4" y="7" width="12" height="1.5" rx="0.5" fill="white" opacity="0.5"/>
-      <rect x="4" y="16" width="32" height="1" rx="0.5" fill="#e2e8f0"/>
-      <rect x="4" y="19" width="22" height="1.5" rx="0.5" fill="#94a3b8"/>
-      <rect x="4" y="22" width="28" height="1" rx="0.5" fill="#cbd5e1"/>
-      <rect x="4" y="25" width="28" height="1" rx="0.5" fill="#e2e8f0"/>
-      <rect x="4" y="30" width="32" height="1" rx="0.5" fill="#e2e8f0"/>
-      <rect x="4" y="33" width="20" height="1.5" rx="0.5" fill="#94a3b8"/>
-      <rect x="4" y="36" width="28" height="1" rx="0.5" fill="#cbd5e1"/>
-      <rect x="4" y="41" width="14" height="1" rx="0.5" fill="#e2e8f0"/>
-      <rect x="22" y="41" width="14" height="1" rx="0.5" fill="#e2e8f0"/>
-      <rect x="4" y="43.5" width="10" height="1" rx="0.5" fill="#cbd5e1"/>
-      <rect x="22" y="43.5" width="10" height="1" rx="0.5" fill="#cbd5e1"/>
-    </svg>
-  ),
-  modern: (
-    <svg viewBox="0 0 40 52" className="w-full h-full">
-      <rect width="40" height="52" fill="white"/>
-      <rect width="14" height="52" fill="#0f172a"/>
-      <rect x="2" y="4" width="8" height="2" rx="0.5" fill="#38bdf8" opacity="0.9"/>
-      <rect x="2" y="7" width="6" height="1.2" rx="0.5" fill="white" opacity="0.6"/>
-      <rect x="2" y="12" width="10" height="0.8" rx="0.3" fill="#38bdf8" opacity="0.5"/>
-      <rect x="2" y="14" width="8" height="0.8" rx="0.3" fill="white" opacity="0.3"/>
-      <rect x="2" y="15.5" width="8" height="0.8" rx="0.3" fill="white" opacity="0.3"/>
-      <rect x="2" y="20" width="10" height="0.8" rx="0.3" fill="#38bdf8" opacity="0.5"/>
-      <rect x="2" y="22" width="9" height="0.5" rx="0.2" fill="white" opacity="0.25"/>
-      <rect x="2" y="23.2" width="7" height="0.5" rx="0.2" fill="white" opacity="0.25"/>
-      <rect x="2" y="24.4" width="8" height="0.5" rx="0.2" fill="white" opacity="0.25"/>
-      <rect x="17" y="4" width="19" height="0.8" rx="0.3" fill="#0ea5e9" opacity="0.7"/>
-      <rect x="17" y="6.5" width="14" height="1.2" rx="0.4" fill="#1e293b"/>
-      <rect x="17" y="8.5" width="10" height="1" rx="0.4" fill="#94a3b8"/>
-      <rect x="17" y="11" width="19" height="0.5" rx="0.2" fill="#e2e8f0"/>
-      <rect x="17" y="13" width="19" height="0.8" rx="0.3" fill="#0ea5e9" opacity="0.7"/>
-      <rect x="17" y="15" width="14" height="1.2" rx="0.4" fill="#1e293b"/>
-      <rect x="17" y="17" width="10" height="1" rx="0.4" fill="#0ea5e9" opacity="0.6"/>
-      <rect x="17" y="19" width="19" height="0.5" rx="0.2" fill="#e2e8f0"/>
-    </svg>
-  ),
-  minimal: (
-    <svg viewBox="0 0 40 52" className="w-full h-full">
-      <rect width="40" height="52" fill="white"/>
-      <rect x="4" y="5" width="24" height="4" rx="1" fill="#18181b" opacity="0.85"/>
-      <rect x="4" y="11" width="30" height="0.6" rx="0.2" fill="#e4e4e7"/>
-      <rect x="4" y="14" width="32" height="0.8" rx="0.3" fill="#a1a1aa"/>
-      <rect x="4" y="16" width="28" height="0.8" rx="0.3" fill="#d4d4d8"/>
-      <rect x="4" y="18" width="30" height="0.8" rx="0.3" fill="#d4d4d8"/>
-      <rect x="4" y="23" width="8" height="0.8" rx="0.3" fill="#a1a1aa"/>
-      <rect x="4" y="26" width="18" height="1" rx="0.4" fill="#3f3f46"/>
-      <rect x="4" y="28" width="12" height="0.8" rx="0.3" fill="#a1a1aa"/>
-      <rect x="4" y="31" width="28" height="0.6" rx="0.2" fill="#d4d4d8"/>
-      <rect x="4" y="33" width="18" height="1" rx="0.4" fill="#3f3f46"/>
-      <rect x="4" y="35" width="12" height="0.8" rx="0.3" fill="#a1a1aa"/>
-      <rect x="4" y="38" width="30" height="0.6" rx="0.2" fill="#d4d4d8"/>
-      <rect x="4" y="41" width="8" height="0.8" rx="0.3" fill="#a1a1aa"/>
-      <rect x="4" y="43.5" width="14" height="0.7" rx="0.3" fill="#d4d4d8"/>
-      <rect x="20" y="43.5" width="14" height="0.7" rx="0.3" fill="#d4d4d8"/>
-    </svg>
-  ),
-  creative: (
-    <svg viewBox="0 0 40 52" className="w-full h-full">
-      <rect width="40" height="52" fill="white"/>
-      <rect width="40" height="1.5" fill="url(#cg)"/>
-      <defs>
-        <linearGradient id="cg" x1="0" x2="1" y1="0" y2="0">
-          <stop offset="0%" stopColor="#0ea5e9"/>
-          <stop offset="100%" stopColor="#22d3ee"/>
-        </linearGradient>
-      </defs>
-      <rect x="4" y="5" width="20" height="3.5" rx="0.8" fill="#0f172a" opacity="0.9"/>
-      <rect x="28" y="5" width="8" height="1" rx="0.3" fill="#94a3b8" opacity="0.6"/>
-      <rect x="28" y="7" width="6" height="1" rx="0.3" fill="#94a3b8" opacity="0.4"/>
-      <rect x="4" y="11" width="30" height="0.5" rx="0.2" fill="#f1f5f9"/>
-      <rect x="4" y="14" width="2" height="2" rx="0.3" fill="#0ea5e9"/>
-      <rect x="8" y="14.2" width="8" height="0.8" rx="0.3" fill="#0ea5e9" opacity="0.8"/>
-      <rect x="4" y="18" width="2" height="14" rx="0.3" fill="#bae6fd" opacity="0.6"/>
-      <rect x="8" y="18" width="14" height="1.2" rx="0.4" fill="#1e293b"/>
-      <rect x="8" y="20.5" width="10" height="1" rx="0.3" fill="#0ea5e9" opacity="0.7"/>
-      <rect x="8" y="22.5" width="22" height="0.7" rx="0.3" fill="#d1d5db"/>
-      <rect x="8" y="24.5" width="18" height="0.7" rx="0.3" fill="#d1d5db"/>
-      <rect x="8" y="27.5" width="14" height="1.2" rx="0.4" fill="#1e293b"/>
-      <rect x="8" y="30" width="10" height="1" rx="0.3" fill="#0ea5e9" opacity="0.7"/>
-      <rect x="4" y="35" width="2" height="0.8" rx="0.3" fill="#0ea5e9"/>
-      <rect x="8" y="35" width="8" height="0.8" rx="0.3" fill="#0ea5e9" opacity="0.8"/>
-      <rect x="4" y="38" width="8" height="3" rx="1" fill="#f0f9ff" stroke="#bae6fd" strokeWidth="0.4"/>
-      <rect x="14" y="38" width="8" height="3" rx="1" fill="#f0f9ff" stroke="#bae6fd" strokeWidth="0.4"/>
-      <rect x="24" y="38" width="8" height="3" rx="1" fill="#f0f9ff" stroke="#bae6fd" strokeWidth="0.4"/>
-    </svg>
-  ),
-};
-
-function TemplatePicker({
-  selected, onChange, isDark,
-}: {
-  selected: TemplateId;
-  onChange: (id: TemplateId) => void;
-  isDark: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-2 px-4 py-2.5 flex-shrink-0 border-b overflow-x-auto"
-      style={{
-        borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)",
-        background: isDark ? "rgba(9,9,11,0.5)" : "rgba(248,250,252,0.9)",
-      }}>
-      <span className={`text-[10px] font-semibold uppercase tracking-[0.1em] flex-shrink-0 ${isDark ? "text-zinc-500" : "text-zinc-400"}`}>
-        Template
-      </span>
-      <div className="flex gap-2">
-        {cvTemplates.map((tpl) => {
-          const active = selected === tpl.id;
-          return (
-            <button
-              key={tpl.id}
-              onClick={() => onChange(tpl.id)}
-              title={tpl.description}
-              className={`group flex flex-col items-center gap-1 flex-shrink-0 transition-all duration-200 active:scale-95`}
-              style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)" }}
-            >
-              {/* Thumbnail */}
-              <div
-                className={`w-10 h-[52px] rounded-md overflow-hidden transition-all duration-200 ${
-                  active
-                    ? "ring-2 ring-sky-500 shadow-md shadow-sky-500/20"
-                    : isDark
-                      ? "ring-1 ring-white/10 opacity-50 hover:opacity-80 hover:ring-white/20"
-                      : "ring-1 ring-black/10 opacity-50 hover:opacity-80 hover:ring-black/15"
-                }`}
-              >
-                {TEMPLATE_THUMBS[tpl.id]}
-              </div>
-              {/* Label */}
-              <span className={`text-[9px] font-medium transition-colors ${
-                active
-                  ? isDark ? "text-sky-400" : "text-sky-600"
-                  : isDark ? "text-zinc-600" : "text-zinc-400"
-              }`}>
-                {tpl.name}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 const LS_KEY = "cv-generator-data";
 const LS_TEMPLATE_KEY = "cv-generator-template";
-
-type Toast = { id: number; message: string; kind: "success" | "error" };
-
-let toastCounter = 0;
-
-function ToastStack({ toasts }: { toasts: Toast[] }) {
-  return (
-    <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none">
-      <AnimatePresence>
-        {toasts.map((t) => (
-          <motion.div
-            key={t.id}
-            initial={{ opacity: 0, y: 16, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.97 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className={`px-4 py-2.5 rounded-full text-[12px] font-medium text-white shadow-lg ${
-              t.kind === "error" ? "bg-red-500/95" : "bg-emerald-600/95"
-            }`}
-          >
-            {t.message}
-          </motion.div>
-        ))}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 function loadFromStorage(): CVData | null {
   try {
@@ -315,33 +104,23 @@ function App() {
   const [templateId, setTemplateId] = useState<TemplateId>("classic");
   const [cvLang, setCvLang]       = useState<CvLang>("ro");
   const [exporting, setExporting] = useState<string | null>(null);
-  const [toasts, setToasts] = useState<Toast[]>([]);
+  const { toasts, showToast }     = useToast();
   const [profiles, setProfiles] = useState<{ id: string; name: string }[]>([]);
   const [activeProfileId, setActiveProfileId] = useState<string>("");
-  // Which panel is visible on small screens (desktop always shows both)
   const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
-  // Mobile toolbar menu (theme/profile/lang/import/export) open state
   const [menuOpen, setMenuOpen] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
-
-  const showToast = (message: string, kind: Toast["kind"] = "success") => {
-    const id = ++toastCounter;
-    setToasts((prev) => [...prev, { id, message, kind }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
-  };
 
   // Load from localStorage after mount (avoids SSR hydration mismatch)
   useEffect(() => {
     let store = loadProfilesStore();
     if (!store) {
-      // first run or pre-profiles save: migrate the legacy single CV
       const legacy = loadFromStorage();
       const id = crypto.randomUUID();
       store = { version: "2", activeId: id, profiles: [{ id, name: "CV principal", data: legacy ?? defaultCV }] };
       saveProfilesStore(store);
     }
     const active = store.profiles.find((p) => p.id === store.activeId) ?? store.profiles[0];
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from localStorage, must run after mount
     setProfiles(store.profiles.map(({ id, name }) => ({ id, name })));
     setActiveProfileId(active.id);
     const valid = validateCV(active.data);
@@ -363,9 +142,7 @@ function App() {
     localStorage.setItem(LS_LANG_KEY, lng);
   };
 
-  // Debounced auto-save into the active profile. While cv is still the
-  // pristine module-level defaultCV (same reference), nothing has been
-  // loaded or typed yet — saving then could overwrite stored data.
+  // Debounced auto-save
   useEffect(() => {
     if (cv === defaultCV || !activeProfileId) return;
     const t = setTimeout(() => {
@@ -385,7 +162,6 @@ function App() {
     if (id === activeProfileId) return;
     const store = loadProfilesStore();
     if (!store) return;
-    // persist the CV being left before loading the next one
     const updated: ProfilesStore = {
       ...store,
       activeId: id,
@@ -813,10 +589,7 @@ function App() {
           className={`${mobileView === "edit" ? "hidden" : "flex"} lg:flex flex-1 flex-col overflow-hidden`}
           style={{ background: RIGHT_PANEL_BG[theme.id] }}
         >
-          {/* Template picker bar */}
           <TemplatePicker selected={templateId} onChange={changeTemplate} isDark={isDark} />
-
-          {/* CV preview */}
           <div className="flex-1 overflow-y-auto p-6">
             <AnimatePresence mode="popLayout">
               <motion.div
