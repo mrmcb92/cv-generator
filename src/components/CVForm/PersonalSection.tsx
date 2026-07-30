@@ -6,6 +6,7 @@ import { Theme } from "@/types/theme";
 import { motion } from "motion/react";
 import { EnvelopeSimple, Phone, MapPin, Globe, LinkedinLogo, Camera, Trash } from "@phosphor-icons/react";
 import { DBInput, SectionHeader, fieldLabelClass } from "@/components/ui/fields";
+import SuggestionChips from "@/components/ui/SuggestionChips";
 import { isValidEmail, isValidPhone, isValidUrl } from "@/lib/fieldValidation";
 import { processPhoto } from "@/lib/processPhoto";
 
@@ -125,8 +126,18 @@ export default function PersonalSection({ data, onChange, theme }: Props) {
         <motion.div variants={ITEM} className="col-span-2">
           <label className={labelClass}>Rezumat profesional</label>
           <DBInput value={data.summary} onChange={(v) => update("summary", v)} placeholder="Scurtă descriere a experienței și obiectivelor tale profesionale..." theme={theme} rows={4} />
-          <p className={`mt-1.5 text-[10px] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
-            2-4 propoziții despre experiența și valoarea ta
+          <SuggestionChips
+            chips={["Profesionist cu experiență în...", "Specialist în...", "Pasionat de...", "Absolvent al..."]}
+            onSelect={(chip) => update("summary", data.summary ? data.summary + " " + chip : chip)}
+            theme={theme}
+          />
+          <p className={`mt-1.5 text-[10px] flex items-center justify-between ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
+            <span>2-4 propoziții despre experiența și valoarea ta</span>
+            {data.summary.length > 0 && (
+              <span className={isDark ? "text-zinc-500" : "text-zinc-400"}>
+                {data.summary.length} caractere · {data.summary.trim().split(/\s+/).filter(Boolean).length} cuvinte
+              </span>
+            )}
           </p>
         </motion.div>
       </div>

@@ -3,7 +3,7 @@
 import { Skill, Language, DrivingLicense, DRIVING_CATEGORIES } from "@/types/cv";
 import { Theme } from "@/types/theme";
 import { motion, AnimatePresence } from "motion/react";
-import { Trash } from "@phosphor-icons/react";
+import { Trash, CopySimple } from "@phosphor-icons/react";
 import { DBInput, DBSelect, AddButton, SectionHeader } from "@/components/ui/fields";
 
 interface Props {
@@ -36,6 +36,16 @@ function DeleteButton({ onClick, theme, label }: { onClick: () => void; theme: T
   );
 }
 
+function CopyButton({ onClick, theme, label }: { onClick: () => void; theme: Theme; label: string }) {
+  const isDark = theme.id === "dark";
+  return (
+    <button onClick={onClick} aria-label={label}
+      className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center transition-all ${isDark ? "text-zinc-600 hover:text-cyan-400 hover:bg-cyan-400/10" : "text-zinc-300 hover:text-cyan-400 hover:bg-cyan-50"}`}>
+      <CopySimple size={12} weight="bold" />
+    </button>
+  );
+}
+
 export default function SkillsSection({ skills, languages, drivingLicenses, onSkillsChange, onLanguagesChange, onDrivingChange, theme }: Props) {
   const updateSkill = (id: string, f: keyof Skill, v: string) =>
     onSkillsChange(skills.map((s) => (s.id === id ? { ...s, [f]: v } : s)));
@@ -43,6 +53,31 @@ export default function SkillsSection({ skills, languages, drivingLicenses, onSk
     onLanguagesChange(languages.map((l) => (l.id === id ? { ...l, [f]: v } : l)));
   const updateLicense = (id: string, f: keyof DrivingLicense, v: string) =>
     onDrivingChange(drivingLicenses.map((d) => (d.id === id ? { ...d, [f]: v } : d)));
+
+  const duplicateSkill = (id: string) => {
+    const idx = skills.findIndex((s) => s.id === id);
+    if (idx === -1) return;
+    const clone = { ...skills[idx], id: crypto.randomUUID() };
+    const next = [...skills];
+    next.splice(idx + 1, 0, clone);
+    onSkillsChange(next);
+  };
+  const duplicateLang = (id: string) => {
+    const idx = languages.findIndex((l) => l.id === id);
+    if (idx === -1) return;
+    const clone = { ...languages[idx], id: crypto.randomUUID() };
+    const next = [...languages];
+    next.splice(idx + 1, 0, clone);
+    onLanguagesChange(next);
+  };
+  const duplicateLicense = (id: string) => {
+    const idx = drivingLicenses.findIndex((d) => d.id === id);
+    if (idx === -1) return;
+    const clone = { ...drivingLicenses[idx], id: crypto.randomUUID() };
+    const next = [...drivingLicenses];
+    next.splice(idx + 1, 0, clone);
+    onDrivingChange(next);
+  };
 
   const isDark = theme.id === "dark";
   const emptyClass = `text-[12px] text-center py-4 ${isDark ? "text-zinc-600" : "text-zinc-400"}`;
@@ -63,6 +98,7 @@ export default function SkillsSection({ skills, languages, drivingLicenses, onSk
             <motion.div key={s.id} variants={ROW} initial="hidden" animate="visible" exit="exit" className="flex items-start gap-2">
               <div className="flex-1"><DBInput value={s.name} onChange={(v) => updateSkill(s.id, "name", v)} placeholder="React, Python, Figma..." theme={theme} /></div>
               <DBSelect value={s.level} onChange={(v) => updateSkill(s.id, "level", v)} options={["Începător", "Mediu", "Avansat", "Expert"]} theme={theme} />
+              <CopyButton onClick={() => duplicateSkill(s.id)} theme={theme} label={`Duplică competența ${s.name || "fără nume"}`} />
               <DeleteButton onClick={() => onSkillsChange(skills.filter((x) => x.id !== s.id))} theme={theme} label={`Șterge competența ${s.name || "fără nume"}`} />
             </motion.div>
           ))}
@@ -83,6 +119,7 @@ export default function SkillsSection({ skills, languages, drivingLicenses, onSk
             <motion.div key={l.id} variants={ROW} initial="hidden" animate="visible" exit="exit" className="flex items-start gap-2">
               <div className="flex-1"><DBInput value={l.name} onChange={(v) => updateLang(l.id, "name", v)} placeholder="Engleză, Franceză..." theme={theme} /></div>
               <DBSelect value={l.level} onChange={(v) => updateLang(l.id, "level", v)} options={["A1", "A2", "B1", "B2", "C1", "C2", "Nativ"]} theme={theme} />
+              <CopyButton onClick={() => duplicateLang(l.id)} theme={theme} label={`Duplică limba ${l.name || "fără nume"}`} />
               <DeleteButton onClick={() => onLanguagesChange(languages.filter((x) => x.id !== l.id))} theme={theme} label={`Șterge limba ${l.name || "fără nume"}`} />
             </motion.div>
           ))}
@@ -103,6 +140,7 @@ export default function SkillsSection({ skills, languages, drivingLicenses, onSk
             <motion.div key={d.id} variants={ROW} initial="hidden" animate="visible" exit="exit" className="flex items-start gap-2">
               <DBSelect value={d.category} onChange={(v) => updateLicense(d.id, "category", v)} options={[...DRIVING_CATEGORIES]} theme={theme} />
               <div className="flex-1"><DBInput value={d.year} onChange={(v) => updateLicense(d.id, "year", v)} placeholder="Anul obținerii (ex: 2015)" theme={theme} /></div>
+              <CopyButton onClick={() => duplicateLicense(d.id)} theme={theme} label={`Duplică categoria ${d.category}`} />
               <DeleteButton onClick={() => onDrivingChange(drivingLicenses.filter((x) => x.id !== d.id))} theme={theme} label={`Șterge categoria ${d.category}`} />
             </motion.div>
           ))}

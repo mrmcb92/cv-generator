@@ -3,7 +3,7 @@
 import { Education } from "@/types/cv";
 import { Theme } from "@/types/theme";
 import { motion, AnimatePresence } from "motion/react";
-import { Trash, GraduationCap } from "@phosphor-icons/react";
+import { Trash, GraduationCap, CopySimple } from "@phosphor-icons/react";
 import { DBInput, AddButton, SectionHeader, fieldLabelClass } from "@/components/ui/fields";
 import { isDateRangeInvalid } from "@/lib/fieldValidation";
 
@@ -26,6 +26,16 @@ const ITEM = {
 export default function EducationSection({ data, onChange, theme }: Props) {
   const add = () => onChange([...data, newEntry()]);
   const remove = (id: string) => onChange(data.filter((e) => e.id !== id));
+
+  const duplicate = (id: string) => {
+    const idx = data.findIndex((e) => e.id === id);
+    if (idx === -1) return;
+    const original = data[idx];
+    const clone: Education = { ...original, id: crypto.randomUUID() };
+    const next = [...data];
+    next.splice(idx + 1, 0, clone);
+    onChange(next);
+  };
   const update = (id: string, field: keyof Education, value: string) =>
     onChange(data.map((e) => (e.id === id ? { ...e, [field]: value } : e)));
 
@@ -56,10 +66,16 @@ export default function EducationSection({ data, onChange, theme }: Props) {
             style={{ boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.04)" : "inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 8px rgba(0,0,0,0.04)" }}>
             <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDark ? "border-white/[0.05]" : "border-black/[0.04]"}`}>
               <span className={`text-[10px] font-mono ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>#{String(idx + 1).padStart(2, "0")}</span>
-              <button onClick={() => remove(entry.id)} aria-label={`Șterge ${entry.institution || `intrarea ${idx + 1}`}`}
-                className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-300 hover:text-red-500 hover:bg-red-50"}`}>
-                <Trash size={12} weight="bold" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button onClick={() => duplicate(entry.id)} aria-label={`Duplică ${entry.institution || `intrarea ${idx + 1}`}`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-cyan-400 hover:bg-cyan-400/10" : "text-zinc-300 hover:text-sky-500 hover:bg-sky-50"}`}>
+                  <CopySimple size={12} weight="bold" />
+                </button>
+                <button onClick={() => remove(entry.id)} aria-label={`Șterge ${entry.institution || `intrarea ${idx + 1}`}`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-300 hover:text-red-500 hover:bg-red-50"}`}>
+                  <Trash size={12} weight="bold" />
+                </button>
+              </div>
             </div>
             <div className="p-4 grid grid-cols-2 gap-x-3 gap-y-3">
               <div className="col-span-2">

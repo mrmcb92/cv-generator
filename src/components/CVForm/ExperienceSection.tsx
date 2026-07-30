@@ -3,8 +3,9 @@
 import { WorkExperience, WorkPosition } from "@/types/cv";
 import { Theme } from "@/types/theme";
 import { motion, AnimatePresence } from "motion/react";
-import { Plus, Trash, Briefcase } from "@phosphor-icons/react";
+import { Plus, Trash, Briefcase, CopySimple } from "@phosphor-icons/react";
 import { DBInput, AddButton, SectionHeader, fieldLabelClass } from "@/components/ui/fields";
+import SuggestionChips from "@/components/ui/SuggestionChips";
 import { isDateRangeInvalid } from "@/lib/fieldValidation";
 
 interface Props {
@@ -39,6 +40,21 @@ export default function ExperienceSection({ data, onChange, theme }: Props) {
 
   const addCompany = () => onChange([...data, newEntry()]);
   const removeCompany = (id: string) => onChange(data.filter((e) => e.id !== id));
+
+  const duplicateCompany = (id: string) => {
+    const idx = data.findIndex((e) => e.id === id);
+    if (idx === -1) return;
+    const original = data[idx];
+    const clone: WorkExperience = {
+      ...original,
+      id: crypto.randomUUID(),
+      positions: original.positions.map((p) => ({ ...p, id: crypto.randomUUID() })),
+    };
+    const next = [...data];
+    next.splice(idx + 1, 0, clone);
+    onChange(next);
+  };
+
   const updateCompany = (id: string, company: string) =>
     onChange(data.map((e) => e.id === id ? { ...e, company } : e));
 
@@ -89,10 +105,16 @@ export default function ExperienceSection({ data, onChange, theme }: Props) {
               <span className={`text-[10px] font-mono ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
                 #{String(idx + 1).padStart(2, "0")}
               </span>
-              <button onClick={() => removeCompany(entry.id)} aria-label={`Șterge compania ${entry.company || idx + 1}`}
-                className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-300 hover:text-red-500 hover:bg-red-50"}`}>
-                <Trash size={12} weight="bold" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button onClick={() => duplicateCompany(entry.id)} aria-label={`Duplică compania ${entry.company || idx + 1}`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-cyan-400 hover:bg-cyan-400/10" : "text-zinc-300 hover:text-sky-500 hover:bg-sky-50"}`}>
+                  <CopySimple size={12} weight="bold" />
+                </button>
+                <button onClick={() => removeCompany(entry.id)} aria-label={`Șterge compania ${entry.company || idx + 1}`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-300 hover:text-red-500 hover:bg-red-50"}`}>
+                  <Trash size={12} weight="bold" />
+                </button>
+              </div>
             </div>
 
             {/* Company name */}
@@ -143,6 +165,11 @@ export default function ExperienceSection({ data, onChange, theme }: Props) {
                       <div className="col-span-2">
                         <label className={labelClass}>Descriere</label>
                         <DBInput rows={3} value={pos.description} onChange={(v) => updatePosition(entry.id, pos.id, "description", v)} placeholder="Responsabilități și realizări principale..." theme={theme} />
+                        <SuggestionChips
+                          chips={["Am coordonat...", "Am implementat...", "Am optimizat...", "Am dezvoltat...", "Am gestionat..."]}
+                          onSelect={(chip) => updatePosition(entry.id, pos.id, "description", pos.description ? pos.description + "\n" + chip : chip)}
+                          theme={theme}
+                        />
                       </div>
                     </div>
                   </motion.div>

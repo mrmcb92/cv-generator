@@ -3,7 +3,7 @@
 import { CustomSection, CustomItem } from "@/types/cv";
 import { Theme } from "@/types/theme";
 import { motion, AnimatePresence } from "motion/react";
-import { Plus, Trash, Stack } from "@phosphor-icons/react";
+import { Plus, Trash, Stack, CopySimple } from "@phosphor-icons/react";
 import { DBInput, AddButton, SectionHeader, fieldLabelClass } from "@/components/ui/fields";
 
 interface Props {
@@ -35,10 +35,34 @@ export default function CustomSectionsForm({ data, onChange, theme }: Props) {
   const updateTitle = (id: string, title: string) =>
     onChange(data.map((s) => s.id === id ? { ...s, title } : s));
 
+  const duplicateSection = (id: string) => {
+    const idx = data.findIndex((s) => s.id === id);
+    if (idx === -1) return;
+    const clone: CustomSection = {
+      ...data[idx],
+      id: crypto.randomUUID(),
+      items: data[idx].items.map((it) => ({ ...it, id: crypto.randomUUID() })),
+    };
+    const next = [...data];
+    next.splice(idx + 1, 0, clone);
+    onChange(next);
+  };
+
   const addItem = (sectionId: string) =>
     onChange(data.map((s) => s.id === sectionId ? { ...s, items: [...s.items, newItem()] } : s));
   const removeItem = (sectionId: string, itemId: string) =>
     onChange(data.map((s) => s.id === sectionId ? { ...s, items: s.items.filter((i) => i.id !== itemId) } : s));
+  const duplicateItem = (sectionId: string, itemId: string) => {
+    onChange(data.map((s) => {
+      if (s.id !== sectionId) return s;
+      const idx = s.items.findIndex((it) => it.id === itemId);
+      if (idx === -1) return s;
+      const clone = { ...s.items[idx], id: crypto.randomUUID() };
+      const nextItems = [...s.items];
+      nextItems.splice(idx + 1, 0, clone);
+      return { ...s, items: nextItems };
+    }));
+  };
   const updateItem = (sectionId: string, itemId: string, field: keyof CustomItem, value: string) =>
     onChange(data.map((s) => s.id === sectionId
       ? { ...s, items: s.items.map((i) => i.id === itemId ? { ...i, [field]: value } : i) }
@@ -68,10 +92,16 @@ export default function CustomSectionsForm({ data, onChange, theme }: Props) {
             style={{ boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.04)" : "inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 8px rgba(0,0,0,0.04)" }}>
             <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDark ? "border-white/[0.05]" : "border-black/[0.04]"}`}>
               <span className={`text-[10px] font-mono ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>#{String(idx + 1).padStart(2, "0")}</span>
-              <button onClick={() => removeSection(section.id)} aria-label={`Șterge secțiunea ${section.title || idx + 1}`}
-                className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-300 hover:text-red-500 hover:bg-red-50"}`}>
-                <Trash size={12} weight="bold" />
-              </button>
+              <div className="flex items-center gap-0">
+                <button onClick={() => duplicateSection(section.id)} aria-label={`Duplică secțiunea ${section.title || idx + 1}`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-cyan-400 hover:bg-cyan-400/10" : "text-zinc-300 hover:text-cyan-400 hover:bg-cyan-50"}`}>
+                  <CopySimple size={12} weight="bold" />
+                </button>
+                <button onClick={() => removeSection(section.id)} aria-label={`Șterge secțiunea ${section.title || idx + 1}`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-300 hover:text-red-500 hover:bg-red-50"}`}>
+                  <Trash size={12} weight="bold" />
+                </button>
+              </div>
             </div>
 
             <div className="px-4 pt-4 pb-3">
@@ -86,12 +116,18 @@ export default function CustomSectionsForm({ data, onChange, theme }: Props) {
                     <span className={`text-[9px] font-semibold uppercase tracking-[0.12em] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
                       Element {iIdx + 1}
                     </span>
-                    {section.items.length > 1 && (
-                      <button onClick={() => removeItem(section.id, item.id)} aria-label={`Șterge elementul ${item.name || iIdx + 1}`}
-                        className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-400 hover:text-red-500 hover:bg-red-50"}`}>
-                        <Trash size={10} weight="bold" />
+                    <div className="flex items-center gap-0">
+                      <button onClick={() => duplicateItem(section.id, item.id)} aria-label={`Duplică elementul ${item.name || iIdx + 1}`}
+                        className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-cyan-400 hover:bg-cyan-400/10" : "text-zinc-400 hover:text-cyan-400 hover:bg-cyan-50"}`}>
+                        <CopySimple size={10} weight="bold" />
                       </button>
-                    )}
+                      {section.items.length > 1 && (
+                        <button onClick={() => removeItem(section.id, item.id)} aria-label={`Șterge elementul ${item.name || iIdx + 1}`}
+                          className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-400 hover:text-red-500 hover:bg-red-50"}`}>
+                          <Trash size={10} weight="bold" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="p-3 grid grid-cols-2 gap-x-3 gap-y-3">
                     <div>

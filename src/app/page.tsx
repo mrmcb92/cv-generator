@@ -15,6 +15,7 @@ import ThemePicker      from "@/components/ThemePicker";
 import TemplatePicker   from "@/components/TemplatePicker";
 import ToastStack       from "@/components/ToastStack";
 import { useToast }     from "@/hooks/useToast";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { cvTemplates, TemplateId } from "@/types/template";
 import { CvLang } from "@/lib/cvLabels";
 import { themes, ThemeId } from "@/types/theme";
@@ -105,6 +106,16 @@ function App() {
   const [cvLang, setCvLang]       = useState<CvLang>("ro");
   const [exporting, setExporting] = useState<string | null>(null);
   const { toasts, showToast }     = useToast();
+
+  useKeyboardShortcuts({
+    "Ctrl+1": () => setActiveTab("personal"),
+    "Ctrl+2": () => setActiveTab("experience"),
+    "Ctrl+3": () => setActiveTab("education"),
+    "Ctrl+4": () => setActiveTab("skills"),
+    "Ctrl+5": () => setActiveTab("other"),
+    "Ctrl+S": () => handleSaveJson(),
+  });
+
   const [profiles, setProfiles] = useState<{ id: string; name: string }[]>([]);
   const [activeProfileId, setActiveProfileId] = useState<string>("");
   const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
@@ -269,7 +280,28 @@ function App() {
     showToast("CV salvat — păstrează fișierul pentru re-import");
   };
 
+  // Warn if key sections are empty before export
+  const checkBeforeExport = (type: string): boolean => {
+    const fullName = `${cv.personal.firstName} ${cv.personal.lastName}`.trim();
+    const hasName = fullName.length > 0;
+    const hasExperience = cv.experience.some((e) => e.company || e.positions.some((p) => p.title));
+    const hasEducation = cv.education.some((e) => e.institution || e.degree);
+    const hasSkills = cv.skills.length > 0;
+
+    if (!hasName) {
+      showToast("Completează măcar numele înainte de export", "error");
+      return false;
+    }
+    if (!hasExperience && !hasEducation && !hasSkills) {
+      // CV-ul e aproape gol — nu blocăm, dar avertizăm
+      showToast("CV-ul e aproape gol — doar numele e completat", "error");
+      // return false; // nu blocăm
+    }
+    return true;
+  };
+
   const handleExport = async (type: "pdf" | "docx" | "html") => {
+    if (!checkBeforeExport(type)) return;
     setExporting(type);
     try {
       if (type === "pdf") {

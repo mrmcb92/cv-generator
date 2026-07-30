@@ -1,5 +1,5 @@
 import React from "react";
-import { Document, Page, Text, View, StyleSheet, pdf, Font, Image } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, pdf, Font, Image, Link } from "@react-pdf/renderer";
 import { CVData } from "@/types/cv";
 import { TemplateId } from "@/types/template";
 
@@ -74,11 +74,11 @@ function ClassicPdf({ data, lang }: { data: CVData; lang: CvLang }) {
               {`${p.firstName} ${p.lastName}`.trim() || "Nume Prenume"}
             </Text>
             <View style={classicS.contactRow}>
-              {p.email    && <Text style={classicS.contactItem}>{p.email}</Text>}
-              {p.phone    && <Text style={classicS.contactItem}>{p.phone}</Text>}
+              {p.email    && <Link src={`mailto:${p.email}`} style={classicS.contactItem}>{p.email}</Link>}
+              {p.phone    && <Link src={`tel:${p.phone}`} style={classicS.contactItem}>{p.phone}</Link>}
               {p.location && <Text style={classicS.contactItem}>{p.location}</Text>}
-              {p.website  && <Text style={classicS.contactItem}>{p.website}</Text>}
-              {p.linkedin && <Text style={classicS.contactItem}>{p.linkedin}</Text>}
+              {p.website  && <Link src={p.website.startsWith('http') ? p.website : `https://${p.website}`} style={classicS.contactItem}>{p.website}</Link>}
+              {p.linkedin && <Link src={p.linkedin.startsWith('http') ? p.linkedin : `https://${p.linkedin}`} style={classicS.contactItem}>{p.linkedin}</Link>}
             </View>
           </View>
           {p.photo ? (
@@ -243,11 +243,11 @@ function ModernPdf({ data, lang }: { data: CVData; lang: CvLang }) {
           <Text style={modernS.nameFirst}>{p.firstName || "Prenume"}</Text>
           <Text style={modernS.nameLast}>{p.lastName || "Nume"}</Text>
           <Text style={modernS.sideSecTitle}>Contact</Text>
-          {p.email    && <Text style={modernS.contactItem}>{p.email}</Text>}
-          {p.phone    && <Text style={modernS.contactItem}>{p.phone}</Text>}
+          {p.email    && <Link src={`mailto:${p.email}`} style={modernS.contactItem}>{p.email}</Link>}
+          {p.phone    && <Link src={`tel:${p.phone}`} style={modernS.contactItem}>{p.phone}</Link>}
           {p.location && <Text style={modernS.contactItem}>{p.location}</Text>}
-          {p.website  && <Text style={modernS.contactItem}>{p.website}</Text>}
-          {p.linkedin && <Text style={modernS.contactItem}>{p.linkedin}</Text>}
+          {p.website  && <Link src={p.website.startsWith('http') ? p.website : `https://${p.website}`} style={modernS.contactItem}>{p.website}</Link>}
+          {p.linkedin && <Link src={p.linkedin.startsWith('http') ? p.linkedin : `https://${p.linkedin}`} style={modernS.contactItem}>{p.linkedin}</Link>}
           {skills.length > 0 && (
             <View>
               <Text style={modernS.sideSecTitle}>{L.skills}</Text>
@@ -384,13 +384,26 @@ function MinimalPdf({ data, lang }: { data: CVData; lang: CvLang }) {
   const L = CV_LABELS[lang];
   const fmtDate = (d: string) => fmtDateL(d, lang);
   const name = `${p.firstName} ${p.lastName}`.trim() || "Nume Prenume";
-  const contactParts = [p.email, p.phone, p.location, p.website, p.linkedin].filter(Boolean);
+  const contactElements: (React.ReactElement | string)[] = [];
+  if (p.email)    contactElements.push(<Link key="email"    src={`mailto:${p.email}`} style={minimalS.contactLine}>{p.email}</Link>);
+  if (p.phone)    contactElements.push(<Link key="phone"    src={`tel:${p.phone}`} style={minimalS.contactLine}>{p.phone}</Link>);
+  if (p.location) contactElements.push(<Text key="location" style={minimalS.contactLine}>{p.location}</Text>);
+  if (p.website)  contactElements.push(<Link key="website"  src={p.website.startsWith('http') ? p.website : `https://${p.website}`} style={minimalS.contactLine}>{p.website}</Link>);
+  if (p.linkedin) contactElements.push(<Link key="linkedin" src={p.linkedin.startsWith('http') ? p.linkedin : `https://${p.linkedin}`} style={minimalS.contactLine}>{p.linkedin}</Link>);
+  // Insert "   ·   " separators between elements
+  const contactLine: React.ReactElement[] = [];
+  contactElements.forEach((el, i) => {
+    if (i > 0) contactLine.push(<Text key={`sep-${i}`} style={minimalS.contactLine}>{"   ·   "}</Text>);
+    contactLine.push(<React.Fragment key={`c-${i}`}>{el}</React.Fragment>);
+  });
   return (
     <Document>
       <Page size="A4" style={minimalS.page}>
         <Text style={minimalS.name}>{name}</Text>
-        {contactParts.length > 0 && (
-          <Text style={minimalS.contactLine}>{contactParts.join("   ·   ")}</Text>
+        {contactLine.length > 0 && (
+          <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+            {contactLine}
+          </View>
         )}
         <View style={minimalS.rule} />
         {p.summary && (
@@ -541,11 +554,11 @@ function CreativePdf({ data, lang }: { data: CVData; lang: CvLang }) {
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <View style={creativeS.contactBlock}>
-              {p.email    && <Text style={creativeS.contactItem}>{p.email}</Text>}
-              {p.phone    && <Text style={creativeS.contactItem}>{p.phone}</Text>}
-              {p.location && <Text style={creativeS.contactItem}>{p.location}</Text>}
-              {p.website  && <Text style={creativeS.contactItem}>{p.website}</Text>}
-              {p.linkedin && <Text style={creativeS.contactItem}>{p.linkedin}</Text>}
+              {p.email    && <Link src={`mailto:${p.email}`}   style={creativeS.contactItem}>{p.email}</Link>}
+              {p.phone    && <Link src={`tel:${p.phone}`}     style={creativeS.contactItem}>{p.phone}</Link>}
+              {p.location && <Text  style={creativeS.contactItem}>{p.location}</Text>}
+              {p.website  && <Link  src={p.website.startsWith('http') ? p.website : `https://${p.website}`}  style={creativeS.contactItem}>{p.website}</Link>}
+              {p.linkedin && <Link  src={p.linkedin.startsWith('http') ? p.linkedin : `https://${p.linkedin}`} style={creativeS.contactItem}>{p.linkedin}</Link>}
             </View>
             {p.photo ? (
               // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an HTML img
