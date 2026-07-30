@@ -4,8 +4,6 @@ import { CVData } from "@/types/cv";
 import { TemplateId } from "@/types/template";
 
 // ─── Font registration (Roboto with Romanian/Latin-Ext support) ───
-// In the browser "/fonts/..." resolves against the app origin; in Node
-// (smoke tests, future SSR) it falls back to the files in public/.
 const FONT_BASE = typeof window === "undefined" ? "public" : "";
 Font.register({
   family: "Roboto",
@@ -196,8 +194,6 @@ function ClassicPdf({ data, lang }: { data: CVData; lang: CvLang }) {
 // ═══════════════════════════════════════════════════════════════════
 const modernS = StyleSheet.create({
   page:      { flexDirection: "row", backgroundColor: "#f1f5f9", fontFamily: "Roboto", fontSize: 11 },
-  // full-height bar painted on every page, so the sidebar background
-  // continues correctly when the CV flows onto page 2+
   sidebarBg: { position: "absolute", top: 0, bottom: 0, left: 0, width: "35%", backgroundColor: "#1e293b" },
   sidebar:   { width: "35%", paddingTop: 26, paddingBottom: 0, paddingHorizontal: 20 },
   nameFirst: { fontSize: 22, fontWeight: "bold", color: "#38bdf8", lineHeight: 1.1 },
@@ -237,7 +233,6 @@ function ModernPdf({ data, lang }: { data: CVData; lang: CvLang }) {
         <View style={modernS.sidebarBg} fixed />
         <View style={modernS.sidebar}>
           {p.photo ? (
-            // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an HTML img
             <Image src={p.photo} style={{ width: 76, height: 76, borderRadius: 38, marginBottom: 12 }} />
           ) : null}
           <Text style={modernS.nameFirst}>{p.firstName || "Prenume"}</Text>
@@ -390,7 +385,6 @@ function MinimalPdf({ data, lang }: { data: CVData; lang: CvLang }) {
   if (p.location) contactElements.push(<Text key="location" style={minimalS.contactLine}>{p.location}</Text>);
   if (p.website)  contactElements.push(<Link key="website"  src={p.website.startsWith('http') ? p.website : `https://${p.website}`} style={minimalS.contactLine}>{p.website}</Link>);
   if (p.linkedin) contactElements.push(<Link key="linkedin" src={p.linkedin.startsWith('http') ? p.linkedin : `https://${p.linkedin}`} style={minimalS.contactLine}>{p.linkedin}</Link>);
-  // Insert "   ·   " separators between elements
   const contactLine: React.ReactElement[] = [];
   contactElements.forEach((el, i) => {
     if (i > 0) contactLine.push(<Text key={`sep-${i}`} style={minimalS.contactLine}>{"   ·   "}</Text>);
@@ -561,7 +555,6 @@ function CreativePdf({ data, lang }: { data: CVData; lang: CvLang }) {
               {p.linkedin && <Link  src={p.linkedin.startsWith('http') ? p.linkedin : `https://${p.linkedin}`} style={creativeS.contactItem}>{p.linkedin}</Link>}
             </View>
             {p.photo ? (
-              // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an HTML img
               <Image src={p.photo} style={{ width: 56, height: 56, borderRadius: 28 }} />
             ) : null}
           </View>
@@ -687,6 +680,307 @@ function CreativePdf({ data, lang }: { data: CVData; lang: CvLang }) {
   );
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// 5. ACADEMIC — serif, violet accent, education focus
+// ═══════════════════════════════════════════════════════════════════
+const academicS = StyleSheet.create({
+  page:        { backgroundColor: "#ffffff", fontFamily: "Times-Roman", fontSize: 11, lineHeight: 1.4 },
+  body:        { padding: "28 32" },
+  name:        { fontSize: 24, fontWeight: "bold", color: "#18181b", marginBottom: 4 },
+  title:       { fontSize: 14, fontWeight: "medium", color: "#4b5563", marginBottom: 10 },
+  contactRow:  { flexDirection: "row", flexWrap: "wrap", gap: "0 16",
+                 borderBottomWidth: 1, borderBottomColor: "#6d28d9", paddingBottom: 8, marginBottom: 14 },
+  contactItem: { fontSize: 10, color: "#6b7280" },
+  section:     { marginBottom: 14 },
+  secTitle:    { fontSize: 10, fontWeight: "bold", color: "#6d28d9", textTransform: "uppercase",
+                 letterSpacing: 1.6, marginBottom: 8 },
+  summaryTxt:  { fontSize: 11, color: "#374151", lineHeight: 1.6, fontStyle: "italic",
+                 paddingLeft: 10, borderLeftWidth: 2, borderLeftColor: "#6d28d9" },
+  eduCard:     { marginBottom: 10 },
+  eduName:     { fontSize: 14, fontWeight: "bold", color: "#18181b" },
+  eduRow:      { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" },
+  eduDate:     { fontSize: 10, color: "#9ca3af", flexShrink: 0, marginLeft: 8 },
+  eduDetail:   { fontSize: 11, color: "#4b5563", fontWeight: "medium", marginTop: 1 },
+  eduGpa:      { fontSize: 10, color: "#9ca3af" },
+  expComp:     { fontSize: 11, fontWeight: "bold", color: "#1f2937", marginBottom: 3 },
+  expItem:     { marginBottom: 8, paddingLeft: 10 },
+  expDot:      { width: 4, height: 4, borderRadius: 2, backgroundColor: "#6d28d9",
+                 position: "absolute", left: 0, top: 5 },
+  expTitle:    { fontSize: 11, fontWeight: "bold", color: "#1f2937" },
+  expDate:     { fontSize: 10, color: "#9ca3af" },
+  expDesc:     { fontSize: 10, color: "#4b5563", marginTop: 2, lineHeight: 1.5 },
+  inlineRow:   { flexDirection: "row", flexWrap: "wrap", gap: "0 20" },
+  inlineItem:  { fontSize: 11, color: "#374151", marginBottom: 2 },
+  inlineMuted: { color: "#9ca3af" },
+});
+
+function AcademicPdf({ data, lang }: { data: CVData; lang: CvLang }) {
+  const { personal: p, experience, education, skills, languages, drivingLicenses, customSections } = data;
+  const L = CV_LABELS[lang];
+  const fmtDate = (d: string) => fmtDateL(d, lang);
+  return (
+    <Document>
+      <Page size="A4" style={academicS.page}>
+        <View style={academicS.body}>
+          <Text style={academicS.name}>
+            {`${p.firstName} ${p.lastName}`.trim() || "Nume Prenume"}
+          </Text>
+          {p.title && <Text style={academicS.title}>{p.title}</Text>}
+          <View style={academicS.contactRow}>
+            {p.email    && <Link src={`mailto:${p.email}`}   style={academicS.contactItem}>{p.email}</Link>}
+            {p.phone    && <Link src={`tel:${p.phone}`}     style={academicS.contactItem}>{p.phone}</Link>}
+            {p.location && <Text  style={academicS.contactItem}>{p.location}</Text>}
+            {p.website  && <Link  src={p.website.startsWith('http') ? p.website : `https://${p.website}`}  style={academicS.contactItem}>{p.website}</Link>}
+            {p.linkedin && <Link  src={p.linkedin.startsWith('http') ? p.linkedin : `https://${p.linkedin}`} style={academicS.contactItem}>{p.linkedin}</Link>}
+          </View>
+          {p.summary && (
+            <View style={academicS.section}>
+              <Text style={academicS.secTitle}>{L.profileLong}</Text>
+              <Text style={academicS.summaryTxt}>{p.summary}</Text>
+            </View>
+          )}
+          {education.length > 0 && (
+            <View style={academicS.section}>
+              <Text style={academicS.secTitle}>{L.education}</Text>
+              {education.map(e => (
+                <View key={e.id} wrap={false} style={academicS.eduCard}>
+                  <View style={academicS.eduRow}>
+                    <Text style={academicS.eduName}>{e.institution || "Instituție"}</Text>
+                    <Text style={academicS.eduDate}>
+                      {fmtDate(e.startDate)} – {e.endDate ? fmtDate(e.endDate) : L.present}
+                    </Text>
+                  </View>
+                  <Text style={academicS.eduDetail}>
+                    {e.degree}{e.field ? ` ${L.inWord} ${e.field}` : ""}
+                  </Text>
+                  {e.gpa && <Text style={academicS.eduGpa}>GPA: {e.gpa}</Text>}
+                </View>
+              ))}
+            </View>
+          )}
+          {experience.length > 0 && (
+            <View style={academicS.section}>
+              <Text style={academicS.secTitle}>{L.experience}</Text>
+              {experience.map(exp => (
+                <View key={exp.id} style={{ marginBottom: 10 }}>
+                  {exp.company && <Text style={academicS.expComp}>{exp.company}</Text>}
+                  {exp.positions.map(pos => (
+                    <View key={pos.id} wrap={false} style={academicS.expItem}>
+                      <View style={academicS.expDot} />
+                      <View style={academicS.eduRow}>
+                        <Text style={academicS.expTitle}>{pos.title}</Text>
+                        <Text style={academicS.expDate}>
+                          {fmtDate(pos.startDate)} – {pos.current ? L.present : fmtDate(pos.endDate)}
+                        </Text>
+                      </View>
+                      {pos.description && <Text style={academicS.expDesc}>{pos.description}</Text>}
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View>
+          )}
+          {(skills.length > 0 || languages.length > 0) && (
+            <View style={academicS.section}>
+              {skills.length > 0 && (
+                <View style={{ marginBottom: languages.length > 0 ? 10 : 0 }}>
+                  <Text style={academicS.secTitle}>{L.skills}</Text>
+                  <View style={academicS.inlineRow}>
+                    {skills.map(s => (
+                      <Text key={s.id} style={academicS.inlineItem}>
+                        {s.name} <Text style={academicS.inlineMuted}>– {s.level}</Text>
+                      </Text>
+                    ))}
+                  </View>
+                </View>
+              )}
+              {languages.length > 0 && (
+                <View>
+                  <Text style={academicS.secTitle}>{L.languages}</Text>
+                  <View style={academicS.inlineRow}>
+                    {languages.map(l => (
+                      <Text key={l.id} style={academicS.inlineItem}>
+                        {l.name} <Text style={academicS.inlineMuted}>– {l.level}</Text>
+                      </Text>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+          {drivingLicenses?.length > 0 && (
+            <View style={academicS.section}>
+              <Text style={academicS.secTitle}>{L.driving}</Text>
+              <View style={academicS.inlineRow}>
+                {drivingLicenses.map(d => (
+                  <Text key={d.id} style={academicS.inlineItem}>
+                    {L.category} {d.category}{d.year ? <Text style={academicS.inlineMuted}> ({d.year})</Text> : null}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          )}
+          {customSections.filter(cs => cs.title && cs.items.length > 0).map(cs => (
+            <View key={cs.id} style={academicS.section}>
+              <Text style={academicS.secTitle}>{cs.title}</Text>
+              {cs.items.map(it => (
+                <View key={it.id} style={{ marginBottom: 8 }}>
+                  <View style={academicS.eduRow}>
+                    <Text style={academicS.expTitle}>
+                      {it.name}{it.subtitle ? ` · ${it.subtitle}` : ""}
+                    </Text>
+                    {it.date ? <Text style={academicS.expDate}>{it.date}</Text> : null}
+                  </View>
+                  {it.description && <Text style={academicS.expDesc}>{it.description}</Text>}
+                </View>
+              ))}
+            </View>
+          ))}
+        </View>
+      </Page>
+    </Document>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 6. EXECUTIVE — compact, red accent, dense leadership layout
+// ═══════════════════════════════════════════════════════════════════
+const executiveS = StyleSheet.create({
+  page:        { backgroundColor: "#ffffff", fontFamily: "Roboto", fontSize: 10, lineHeight: 1.35 },
+  body:        { padding: "20 28" },
+  stripe:      { height: 3, backgroundColor: "#b91c1c", marginBottom: 14 },
+  name:        { fontSize: 30, fontWeight: "bold", color: "#111827", letterSpacing: -0.5,
+                 lineHeight: 1, marginBottom: 2 },
+  title:       { fontSize: 12, fontWeight: "medium", color: "#6b7280", marginBottom: 6 },
+  contactRow:  { flexDirection: "row", flexWrap: "wrap", gap: "0 12", marginBottom: 10 },
+  contactItem: { fontSize: 10, color: "#6b7280" },
+  section:     { marginBottom: 10 },
+  secTitle:    { fontSize: 9, fontWeight: "bold", color: "#b91c1c", textTransform: "uppercase",
+                 letterSpacing: 1.8, marginBottom: 5 },
+  summaryTxt:  { fontSize: 10, color: "#4b5563", lineHeight: 1.4, marginBottom: 2 },
+  expEntry:    { marginBottom: 6 },
+  expRow:      { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" },
+  expTitle:    { fontSize: 10, fontWeight: "bold", color: "#111827", flex: 1 },
+  expDate:     { fontSize: 9, color: "#9ca3af", flexShrink: 0, marginLeft: 8 },
+  expDesc:     { fontSize: 10, color: "#4b5563", marginTop: 1, lineHeight: 1.35 },
+  eduLine:     { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline",
+                 marginBottom: 2 },
+  eduText:     { fontSize: 10, color: "#374151" },
+  eduBold:     { fontWeight: "bold" },
+  eduDate:     { fontSize: 9, color: "#9ca3af", flexShrink: 0, marginLeft: 8 },
+  inlineTxt:   { fontSize: 10, color: "#374151", lineHeight: 1.4 },
+});
+
+function ExecutivePdf({ data, lang }: { data: CVData; lang: CvLang }) {
+  const { personal: p, experience, education, skills, languages, drivingLicenses, customSections } = data;
+  const L = CV_LABELS[lang];
+  const fmtDate = (d: string) => fmtDateL(d, lang);
+  return (
+    <Document>
+      <Page size="A4" style={executiveS.page}>
+        <View style={executiveS.stripe} />
+        <View style={executiveS.body}>
+          <Text style={executiveS.name}>
+            {`${p.firstName} ${p.lastName}`.trim() || "Nume Prenume"}
+          </Text>
+          {p.title && <Text style={executiveS.title}>{p.title}</Text>}
+          <View style={executiveS.contactRow}>
+            {p.email    && <Link src={`mailto:${p.email}`}   style={executiveS.contactItem}>{p.email}</Link>}
+            {p.phone    && <Link src={`tel:${p.phone}`}     style={executiveS.contactItem}>{p.phone}</Link>}
+            {p.location && <Text  style={executiveS.contactItem}>{p.location}</Text>}
+            {p.website  && <Link  src={p.website.startsWith('http') ? p.website : `https://${p.website}`}  style={executiveS.contactItem}>{p.website}</Link>}
+            {p.linkedin && <Link  src={p.linkedin.startsWith('http') ? p.linkedin : `https://${p.linkedin}`} style={executiveS.contactItem}>{p.linkedin}</Link>}
+          </View>
+          {p.summary && (
+            <View style={executiveS.section}>
+              <Text style={executiveS.summaryTxt}>{p.summary}</Text>
+            </View>
+          )}
+          {experience.length > 0 && (
+            <View style={executiveS.section}>
+              <Text style={executiveS.secTitle}>{L.experience}</Text>
+              {experience.map(exp => (
+                <View key={exp.id}>
+                  {exp.positions.map(pos => (
+                    <View key={pos.id} wrap={false} style={executiveS.expEntry}>
+                      <View style={executiveS.expRow}>
+                        <Text style={executiveS.expTitle}>
+                          {exp.company}{pos.title ? ` — ${pos.title}` : ""}
+                        </Text>
+                        <Text style={executiveS.expDate}>
+                          {fmtDate(pos.startDate)} – {pos.current ? L.present : fmtDate(pos.endDate)}
+                        </Text>
+                      </View>
+                      {pos.description && <Text style={executiveS.expDesc}>{pos.description}</Text>}
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View>
+          )}
+          {education.length > 0 && (
+            <View style={executiveS.section}>
+              <Text style={executiveS.secTitle}>{L.education}</Text>
+              {education.map(e => (
+                <View key={e.id} wrap={false} style={executiveS.eduLine}>
+                  <Text style={executiveS.eduText}>
+                    <Text style={executiveS.eduBold}>{e.institution}</Text>
+                    {e.degree ? ` — ${e.degree}` : ""}
+                    {e.field ? `, ${e.field}` : ""}
+                  </Text>
+                  <Text style={executiveS.eduDate}>
+                    {fmtDate(e.startDate)} – {e.endDate ? fmtDate(e.endDate) : L.present}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+          {skills.length > 0 && (
+            <View style={executiveS.section}>
+              <Text style={executiveS.secTitle}>{L.skills}</Text>
+              <Text style={executiveS.inlineTxt}>
+                {skills.map(s => s.name).join(", ")}
+              </Text>
+            </View>
+          )}
+          {languages.length > 0 && (
+            <View style={executiveS.section}>
+              <Text style={executiveS.secTitle}>{L.languages}</Text>
+              <Text style={executiveS.inlineTxt}>
+                {languages.map(l => `${l.name} (${l.level})`).join(", ")}
+              </Text>
+            </View>
+          )}
+          {drivingLicenses?.length > 0 && (
+            <View style={executiveS.section}>
+              <Text style={executiveS.secTitle}>{L.driving}</Text>
+              <Text style={executiveS.inlineTxt}>
+                {drivingLicenses.map(d => `${L.category} ${d.category}${d.year ? ` (${d.year})` : ""}`).join(", ")}
+              </Text>
+            </View>
+          )}
+          {customSections.filter(cs => cs.title && cs.items.length > 0).map(cs => (
+            <View key={cs.id} style={executiveS.section}>
+              <Text style={executiveS.secTitle}>{cs.title}</Text>
+              {cs.items.map(it => (
+                <View key={it.id} style={{ marginBottom: 4 }}>
+                  <View style={executiveS.expRow}>
+                    <Text style={executiveS.expTitle}>
+                      {it.name}{it.subtitle ? ` · ${it.subtitle}` : ""}
+                    </Text>
+                    {it.date ? <Text style={executiveS.expDate}>{it.date}</Text> : null}
+                  </View>
+                  {it.description && <Text style={executiveS.expDesc}>{it.description}</Text>}
+                </View>
+              ))}
+            </View>
+          ))}
+        </View>
+      </Page>
+    </Document>
+  );
+}
+
 // ─── Public API ────────────────────────────────────────────────────
 export function buildPdfDocument(
   data: CVData,
@@ -698,6 +992,8 @@ export function buildPdfDocument(
     case "modern":   return <ModernPdf   data={data} lang={lang} />;
     case "minimal":  return <MinimalPdf  data={data} lang={lang} />;
     case "creative": return <CreativePdf data={data} lang={lang} />;
+    case "academic":  return <AcademicPdf  data={data} lang={lang} />;
+    case "executive": return <ExecutivePdf data={data} lang={lang} />;
     default:         return <ClassicPdf  data={data} lang={lang} />;
   }
 }
