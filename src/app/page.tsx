@@ -679,14 +679,18 @@ function App() {
         </div>
       </div>
 
-      {/* Mobile editor/preview toggle */}
-      <div className={`lg:hidden flex-shrink-0 flex border-t ${isDark ? "bg-zinc-900 border-white/10" : "bg-white border-black/10"}`}>
+      {/* Mobile editor/preview toggle — safe area bottom inset on iOS */}
+      <div
+        className={`lg:hidden flex-shrink-0 flex border-t pb-[env(safe-area-inset-bottom,0px)] ${
+          isDark ? "bg-zinc-900 border-white/10" : "bg-white border-black/10"
+        }`}
+      >
         {([
           { id: "edit" as const,    label: "Editor" },
           { id: "preview" as const, label: "Previzualizare" },
         ]).map((v) => (
           <button key={v.id} onClick={() => setMobileView(v.id)}
-            className={`flex-1 py-3 text-[12px] font-semibold transition-colors ${
+            className={`flex-1 min-h-[44px] py-3 text-[12px] font-semibold transition-colors ${
               mobileView === v.id
                 ? isDark ? "text-cyan-400" : "text-sky-600"
                 : isDark ? "text-zinc-500" : "text-zinc-400"

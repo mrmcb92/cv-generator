@@ -5,6 +5,12 @@
   --foreground: #0f0f12;
   --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Safe area insets — populated by env() on iOS, 0px elsewhere */
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
 }
 
 @theme inline {
@@ -14,12 +20,37 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* ── iOS / mobile web overrides ── */
+
+/* Prevent iOS from auto-zooming on input focus */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Disable pull-to-refresh on the root — we handle scrolling internally */
 body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent callout (copy/paste menu) on long-press in the app area */
+.h-screen {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection inside inputs, textareas, and the CV preview */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 /* Grain overlay — fixed, pointer-events-none, GPU-safe */
@@ -33,6 +64,7 @@ body::after {
   background-size: 200px 200px;
   opacity: 0.022;
   mix-blend-mode: overlay;
+  pointer-events: none;
 }
 
 /* Input focus — remove browser default outline */
@@ -45,3 +77,9 @@ input:focus, textarea:focus, select:focus {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.22); }
+
+/* ── Draggable items — prevent scroll interference ── */
+[draggable="true"],
+[data-dnd-draggable] {
+  touch-action: none;
+}
