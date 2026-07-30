@@ -1,6 +1,8 @@
 export interface PersonalInfo {
   firstName: string;
   lastName: string;
+  /** Titlu profesional (ex: "Software Engineer", "Designer") */
+  title: string;
   email: string;
   phone: string;
   location: string;
@@ -89,6 +91,7 @@ export const defaultCV: CVData = {
   personal: {
     firstName: "",
     lastName: "",
+    title: "",
     email: "",
     phone: "",
     location: "",

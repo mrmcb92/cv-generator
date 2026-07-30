@@ -45,6 +45,7 @@ export function validateCV(input: unknown): CVData | null {
     personal: {
       firstName: str(p.firstName),
       lastName:  str(p.lastName),
+      title:     str(p.title),
       email:     str(p.email),
       phone:     str(p.phone),
       location:  str(p.location),

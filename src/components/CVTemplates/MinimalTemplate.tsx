@@ -1,26 +1,27 @@
 import React from 'react';
 import { CVData } from '@/types/cv';
-import { CvLang } from '@/lib/cvLabels';
+import { CV_LABELS, CvLang, fmtDate } from '@/lib/cvLabels';
 
 interface MinimalTemplateProps {
   data: CVData;
   lang?: CvLang;
 }
 
-export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data }) => {
-  const { personal, experience, education, skills, customSections } = data;
+export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data, lang = "ro" }) => {
+  const { personal, experience, education, skills, languages, drivingLicenses, customSections } = data;
+  const L = CV_LABELS[lang];
   const fullName = [personal.firstName, personal.lastName].filter(Boolean).join(' ') || 'Nume Prenume';
-  const jobTitle = (personal as Record<string, any>).title || (personal as Record<string, any>).jobTitle || (personal as Record<string, any>).profession || '';
 
   return (
     <div className="max-w-[210mm] min-h-[297mm] mx-auto bg-white p-[15mm] text-neutral-800 font-sans text-xs leading-relaxed shadow-sm print:shadow-none print:p-0">
+      {/* Header */}
       <header className="mb-8">
         <h1 className="text-3xl font-light text-neutral-900 tracking-tight mb-1">
           {fullName}
         </h1>
-        {jobTitle && (
+        {personal.title && (
           <p className="text-xs font-semibold text-neutral-500 uppercase tracking-widest mb-3">
-            {jobTitle}
+            {personal.title}
           </p>
         )}
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-neutral-500 border-t border-neutral-200 pt-2">
@@ -31,53 +32,63 @@ export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data }) => {
         </div>
       </header>
 
+      {/* Summary */}
       {personal.summary && (
         <section className="mb-8">
           <p className="text-neutral-700 leading-relaxed text-justify">{personal.summary}</p>
         </section>
       )}
 
-      {experience && experience.length > 0 && (
+      {/* Experience */}
+      {experience.length > 0 && (
         <section className="mb-8">
           <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-4">
-            Experienţă
+            {L.experienceShort}
           </h2>
           <div className="space-y-5">
-            {experience.map((exp: any) => (
-              <div key={exp.id || Math.random()} className="break-inside-avoid grid grid-cols-4 gap-4">
-                <div className="col-span-1 text-[11px] text-neutral-400 font-medium">
-                  {exp.startDate} – {exp.current ? 'Prezent' : exp.endDate}
-                </div>
-                <div className="col-span-3">
-                  <h3 className="font-semibold text-neutral-900">{((exp as any).position || (exp as any).role || (exp as any).jobTitle || (exp as any).positions || "")}</h3>
-                  <div className="text-neutral-500 font-medium mb-1">{exp.company}</div>
-                  <p className="text-neutral-600 whitespace-pre-line text-justify leading-relaxed">
-                    {exp.description}
-                  </p>
-                </div>
+            {experience.map((exp) => (
+              <div key={exp.id} className="break-inside-avoid">
+                {exp.company && (
+                  <div className="text-[11px] text-neutral-400 font-medium mb-2">{exp.company}</div>
+                )}
+                {exp.positions.map((pos) => (
+                  <div key={pos.id} className="grid grid-cols-4 gap-4 mb-3">
+                    <div className="col-span-1 text-[11px] text-neutral-400 font-medium">
+                      {fmtDate(pos.startDate, lang)}{"\n"}– {pos.current ? L.present : fmtDate(pos.endDate, lang)}
+                    </div>
+                    <div className="col-span-3">
+                      <h3 className="font-semibold text-neutral-900">{pos.title}</h3>
+                      {pos.description && (
+                        <p className="text-neutral-600 whitespace-pre-line text-justify leading-relaxed mt-0.5">
+                          {pos.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
         </section>
       )}
 
-      {education && education.length > 0 && (
+      {/* Education */}
+      {education.length > 0 && (
         <section className="mb-8">
           <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-4">
-            Educaţie
+            {L.education}
           </h2>
           <div className="space-y-4">
-            {education.map((edu: any) => (
-              <div key={edu.id || Math.random()} className="break-inside-avoid grid grid-cols-4 gap-4">
+            {education.map((edu) => (
+              <div key={edu.id} className="break-inside-avoid grid grid-cols-4 gap-4">
                 <div className="col-span-1 text-[11px] text-neutral-400 font-medium">
-                  {edu.startDate} – {edu.endDate}
+                  {fmtDate(edu.startDate, lang)} – {fmtDate(edu.endDate, lang)}
                 </div>
                 <div className="col-span-3">
-                  <h3 className="font-semibold text-neutral-900">{edu.degree}</h3>
+                  <h3 className="font-semibold text-neutral-900">
+                    {edu.degree}{edu.field ? `, ${edu.field}` : ""}
+                  </h3>
                   <div className="text-neutral-500 font-medium">{edu.institution}</div>
-                  {edu.description && (
-                    <p className="text-neutral-600 mt-1">{edu.description}</p>
-                  )}
                 </div>
               </div>
             ))}
@@ -85,27 +96,66 @@ export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data }) => {
         </section>
       )}
 
-      {skills && skills.length > 0 && (
+      {/* Skills & Languages combo */}
+      {(skills.length > 0 || languages.length > 0) && (
         <section className="mb-8">
           <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-3">
-            Competenţe
+            {L.skillsAndLangs}
           </h2>
-          <div className="flex flex-wrap gap-2">
-            {skills.map((skill: any) => (
-              <span key={skill.id || Math.random()} className="text-neutral-700 bg-neutral-100 px-2.5 py-1 rounded-sm text-[11px]">
-                {typeof skill === 'string' ? skill : skill.name}
+          <div className="flex flex-wrap gap-x-6 gap-y-1">
+            {skills.map((s) => (
+              <span key={s.id} className="text-neutral-700 text-[11px]">
+                {s.name} <span className="text-neutral-400">– {s.level}</span>
+              </span>
+            ))}
+            {languages.map((l) => (
+              <span key={l.id} className="text-neutral-700 text-[11px]">
+                {l.name} <span className="text-neutral-400">– {l.level}</span>
               </span>
             ))}
           </div>
         </section>
       )}
 
-      {customSections && customSections.map((section: any) => (
-        <section key={section.id || Math.random()} className="mb-8 break-inside-avoid">
+      {/* Driving licenses */}
+      {drivingLicenses.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-3">
+            {L.driving}
+          </h2>
+          <div className="flex flex-wrap gap-x-6 gap-y-1 text-[11px] text-neutral-700">
+            {drivingLicenses.map((d) => (
+              <span key={d.id}>{L.category} {d.category}{d.year ? ` (${d.year})` : ""}</span>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Custom sections */}
+      {customSections.map((section) => (
+        <section key={section.id} className="mb-8 break-inside-avoid">
           <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-3">
             {section.title}
           </h2>
-          <p className="text-neutral-700 whitespace-pre-line leading-relaxed">{section.content}</p>
+          <div className="space-y-3">
+            {section.items.map((item) => (
+              <div key={item.id} className="grid grid-cols-4 gap-4">
+                <div className="col-span-1 text-[11px] text-neutral-400 font-medium">
+                  {item.date || ""}
+                </div>
+                <div className="col-span-3">
+                  <h3 className="font-semibold text-neutral-900">
+                    {item.name}{item.subtitle ? `, ${item.subtitle}` : ""}
+                  </h3>
+                  {item.description && (
+                    <p className="text-neutral-600 whitespace-pre-line leading-relaxed mt-0.5">
+                      {item.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
       ))}
     </div>
