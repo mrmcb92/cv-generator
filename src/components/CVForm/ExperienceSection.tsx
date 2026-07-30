@@ -5,6 +5,7 @@ import { Theme } from "@/types/theme";
 import { motion, AnimatePresence } from "motion/react";
 import { Plus, Trash, Briefcase, CopySimple } from "@phosphor-icons/react";
 import { DBInput, AddButton, SectionHeader, fieldLabelClass } from "@/components/ui/fields";
+import DateInput from "@/components/ui/DateInput";
 import SuggestionChips from "@/components/ui/SuggestionChips";
 import { isDateRangeInvalid } from "@/lib/fieldValidation";
 
@@ -151,11 +152,11 @@ export default function ExperienceSection({ data, onChange, theme }: Props) {
                       </div>
                       <div>
                         <label className={labelClass}>Data început</label>
-                        <DBInput type="month" value={pos.startDate} onChange={(v) => updatePosition(entry.id, pos.id, "startDate", v)} theme={theme} />
+                        <DateInput value={pos.startDate} onChange={(v) => updatePosition(entry.id, pos.id, "startDate", v)} theme={theme} />
                       </div>
                       <div>
                         <label className={labelClass}>Data sfârșit</label>
-                        <DBInput type="month" value={pos.endDate} onChange={(v) => updatePosition(entry.id, pos.id, "endDate", v)} disabled={pos.current} theme={theme}
+                        <DateInput value={pos.endDate} onChange={(v) => updatePosition(entry.id, pos.id, "endDate", v)} disabled={pos.current} theme={theme}
                           invalid={!pos.current && isDateRangeInvalid(pos.startDate, pos.endDate)} hint="Data de sfârșit e înaintea celei de început" />
                         <label className={`flex items-center gap-1.5 mt-1.5 text-[11px] cursor-pointer ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
                           <input type="checkbox" checked={pos.current} onChange={(e) => updatePosition(entry.id, pos.id, "current", e.target.checked)} className="rounded accent-sky-500" />

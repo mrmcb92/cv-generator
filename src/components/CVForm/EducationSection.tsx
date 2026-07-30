@@ -5,6 +5,7 @@ import { Theme } from "@/types/theme";
 import { motion, AnimatePresence } from "motion/react";
 import { Trash, GraduationCap, CopySimple } from "@phosphor-icons/react";
 import { DBInput, AddButton, SectionHeader, fieldLabelClass } from "@/components/ui/fields";
+import DateInput from "@/components/ui/DateInput";
 import { isDateRangeInvalid } from "@/lib/fieldValidation";
 
 interface Props {
@@ -92,11 +93,11 @@ export default function EducationSection({ data, onChange, theme }: Props) {
               </div>
               <div>
                 <label className={labelClass}>Început</label>
-                <DBInput type="month" value={entry.startDate} onChange={(v) => update(entry.id, "startDate", v)} theme={theme} />
+                <DateInput value={entry.startDate} onChange={(v) => update(entry.id, "startDate", v)} theme={theme} />
               </div>
               <div>
                 <label className={labelClass}>Sfârșit</label>
-                <DBInput type="month" value={entry.endDate} onChange={(v) => update(entry.id, "endDate", v)} theme={theme}
+                <DateInput value={entry.endDate} onChange={(v) => update(entry.id, "endDate", v)} theme={theme}
                   invalid={isDateRangeInvalid(entry.startDate, entry.endDate)} hint="Data de sfârșit e înaintea celei de început" />
               </div>
             </div>
