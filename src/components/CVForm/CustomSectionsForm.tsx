@@ -2,7 +2,8 @@
 
 import { CustomSection, CustomItem } from "@/types/cv";
 import { Theme } from "@/types/theme";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
+import DraggableList from "@/components/ui/DraggableList";
 import { Plus, Trash, Stack, CopySimple } from "@phosphor-icons/react";
 import { DBInput, AddButton, SectionHeader, fieldLabelClass } from "@/components/ui/fields";
 
@@ -85,9 +86,14 @@ export default function CustomSectionsForm({ data, onChange, theme }: Props) {
         </motion.div>
       )}
 
-      <AnimatePresence>
-        {data.map((section, idx) => (
-          <motion.div key={section.id} variants={ITEM} initial="hidden" animate="visible" exit="exit"
+      <DraggableList
+        items={data}
+        onChange={onChange}
+        getId={(s) => s.id}
+        theme={theme}
+        scope="sections"
+        renderItem={(section, idx) => (
+          <motion.div variants={ITEM} initial="hidden" animate="visible"
             className={`rounded-2xl overflow-hidden ${isDark ? "bg-white/[0.03] ring-1 ring-white/[0.06]" : "bg-black/[0.02] ring-1 ring-black/[0.05]"}`}
             style={{ boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.04)" : "inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 8px rgba(0,0,0,0.04)" }}>
             <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDark ? "border-white/[0.05]" : "border-black/[0.04]"}`}>
@@ -110,45 +116,52 @@ export default function CustomSectionsForm({ data, onChange, theme }: Props) {
             </div>
 
             <div className={`mx-4 mb-3 rounded-xl overflow-hidden border ${isDark ? "border-white/[0.05]" : "border-black/[0.04]"}`}>
-              {section.items.map((item, iIdx) => (
-                <div key={item.id} className={iIdx > 0 ? (isDark ? "border-t border-white/[0.05]" : "border-t border-black/[0.04]") : ""}>
-                  <div className={`flex items-center justify-between px-3 py-1.5 ${isDark ? "bg-white/[0.02]" : "bg-black/[0.015]"}`}>
-                    <span className={`text-[9px] font-semibold uppercase tracking-[0.12em] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
-                      Element {iIdx + 1}
-                    </span>
-                    <div className="flex items-center gap-0">
-                      <button onClick={() => duplicateItem(section.id, item.id)} aria-label={`Duplică elementul ${item.name || iIdx + 1}`}
-                        className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-cyan-400 hover:bg-cyan-400/10" : "text-zinc-400 hover:text-cyan-400 hover:bg-cyan-50"}`}>
-                        <CopySimple size={10} weight="bold" />
-                      </button>
-                      {section.items.length > 1 && (
-                        <button onClick={() => removeItem(section.id, item.id)} aria-label={`Șterge elementul ${item.name || iIdx + 1}`}
-                          className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-400 hover:text-red-500 hover:bg-red-50"}`}>
-                          <Trash size={10} weight="bold" />
+              <DraggableList
+                items={section.items}
+                onChange={(newItems) => onChange(data.map((s) => s.id === section.id ? { ...s, items: newItems } : s))}
+                getId={(item) => item.id}
+                theme={theme}
+                scope={`items-${section.id}`}
+                renderItem={(item, iIdx) => (
+                  <div className={iIdx > 0 ? (isDark ? "border-t border-white/[0.05]" : "border-t border-black/[0.04]") : ""}>
+                    <div className={`flex items-center justify-between px-3 py-1.5 ${isDark ? "bg-white/[0.02]" : "bg-black/[0.015]"}`}>
+                      <span className={`text-[9px] font-semibold uppercase tracking-[0.12em] ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
+                        Element {iIdx + 1}
+                      </span>
+                      <div className="flex items-center gap-0">
+                        <button onClick={() => duplicateItem(section.id, item.id)} aria-label={`Duplică elementul ${item.name || iIdx + 1}`}
+                          className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-cyan-400 hover:bg-cyan-400/10" : "text-zinc-400 hover:text-cyan-400 hover:bg-cyan-50"}`}>
+                          <CopySimple size={10} weight="bold" />
                         </button>
-                      )}
+                        {section.items.length > 1 && (
+                          <button onClick={() => removeItem(section.id, item.id)} aria-label={`Șterge elementul ${item.name || iIdx + 1}`}
+                            className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 ${isDark ? "text-zinc-600 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-400 hover:text-red-500 hover:bg-red-50"}`}>
+                            <Trash size={10} weight="bold" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-3 grid grid-cols-2 gap-x-3 gap-y-3">
+                      <div>
+                        <label className={labelClass}>Denumire</label>
+                        <DBInput value={item.name} onChange={(v) => updateItem(section.id, item.id, "name", v)} placeholder="Certificat AWS / Proiect X..." theme={theme} />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Detaliu (opțional)</label>
+                        <DBInput value={item.subtitle} onChange={(v) => updateItem(section.id, item.id, "subtitle", v)} placeholder="Emitent, rol, locație..." theme={theme} />
+                      </div>
+                      <div className="col-span-2">
+                        <label className={labelClass}>Dată / Perioadă (opțional)</label>
+                        <DBInput value={item.date} onChange={(v) => updateItem(section.id, item.id, "date", v)} placeholder="2023 sau Mar 2021 – Iun 2022" theme={theme} />
+                      </div>
+                      <div className="col-span-2">
+                        <label className={labelClass}>Descriere (opțional)</label>
+                        <DBInput rows={2} value={item.description} onChange={(v) => updateItem(section.id, item.id, "description", v)} placeholder="Detalii relevante..." theme={theme} />
+                      </div>
                     </div>
                   </div>
-                  <div className="p-3 grid grid-cols-2 gap-x-3 gap-y-3">
-                    <div>
-                      <label className={labelClass}>Denumire</label>
-                      <DBInput value={item.name} onChange={(v) => updateItem(section.id, item.id, "name", v)} placeholder="Certificat AWS / Proiect X..." theme={theme} />
-                    </div>
-                    <div>
-                      <label className={labelClass}>Detaliu (opțional)</label>
-                      <DBInput value={item.subtitle} onChange={(v) => updateItem(section.id, item.id, "subtitle", v)} placeholder="Emitent, rol, locație..." theme={theme} />
-                    </div>
-                    <div className="col-span-2">
-                      <label className={labelClass}>Dată / Perioadă (opțional)</label>
-                      <DBInput value={item.date} onChange={(v) => updateItem(section.id, item.id, "date", v)} placeholder="2023 sau Mar 2021 – Iun 2022" theme={theme} />
-                    </div>
-                    <div className="col-span-2">
-                      <label className={labelClass}>Descriere (opțional)</label>
-                      <DBInput rows={2} value={item.description} onChange={(v) => updateItem(section.id, item.id, "description", v)} placeholder="Detalii relevante..." theme={theme} />
-                    </div>
-                  </div>
-                </div>
-              ))}
+                )}
+              />
 
               <div className={`px-3 py-2 ${isDark ? "border-t border-white/[0.05]" : "border-t border-black/[0.04]"}`}>
                 <button onClick={() => addItem(section.id)}
@@ -159,8 +172,8 @@ export default function CustomSectionsForm({ data, onChange, theme }: Props) {
               </div>
             </div>
           </motion.div>
-        ))}
-      </AnimatePresence>
+        )}
+      />
     </motion.div>
   );
 }

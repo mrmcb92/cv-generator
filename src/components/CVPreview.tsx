@@ -9,6 +9,8 @@ import { ClassicTemplate } from "./CVTemplates/ClassicTemplate";
 import { ModernTemplate } from "./CVTemplates/ModernTemplate";
 import { MinimalTemplate } from "./CVTemplates/MinimalTemplate";
 import { CreativeTemplate } from "./CVTemplates/CreativeTemplate";
+import { AcademicTemplate } from "./CVTemplates/AcademicTemplate";
+import { ExecutiveTemplate } from "./CVTemplates/ExecutiveTemplate";
 
 interface Props {
   data: CVData;
@@ -85,6 +87,8 @@ export default function CVPreview({ data, templateId, lang = "ro" }: Props) {
     case "modern":   template = <ModernTemplate   data={data} lang={lang} />; break;
     case "minimal":  template = <MinimalTemplate  data={data} lang={lang} />; break;
     case "creative": template = <CreativeTemplate data={data} lang={lang} />; break;
+    case "academic": template = <AcademicTemplate data={data} lang={lang} />; break;
+    case "executive":template = <ExecutiveTemplate data={data} lang={lang} />; break;
     default:         template = <ClassicTemplate  data={data} lang={lang} />; break;
   }
 

@@ -2,7 +2,8 @@
 
 import { Education } from "@/types/cv";
 import { Theme } from "@/types/theme";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
+import DraggableList from "@/components/ui/DraggableList";
 import { Trash, GraduationCap, CopySimple } from "@phosphor-icons/react";
 import { DBInput, AddButton, SectionHeader, fieldLabelClass } from "@/components/ui/fields";
 import DateInput from "@/components/ui/DateInput";
@@ -60,9 +61,14 @@ export default function EducationSection({ data, onChange, theme }: Props) {
         </motion.div>
       )}
 
-      <AnimatePresence>
-        {data.map((entry, idx) => (
-          <motion.div key={entry.id} variants={ITEM} initial="hidden" animate="visible" exit="exit"
+      <DraggableList
+        items={data}
+        onChange={onChange}
+        getId={(e) => e.id}
+        theme={theme}
+        scope="education"
+        renderItem={(entry, idx) => (
+          <motion.div variants={ITEM} initial="hidden" animate="visible"
             className={`rounded-2xl overflow-hidden ${isDark ? "bg-white/[0.03] ring-1 ring-white/[0.06]" : "bg-black/[0.02] ring-1 ring-black/[0.05]"}`}
             style={{ boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.04)" : "inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 8px rgba(0,0,0,0.04)" }}>
             <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDark ? "border-white/[0.05]" : "border-black/[0.04]"}`}>
@@ -102,8 +108,8 @@ export default function EducationSection({ data, onChange, theme }: Props) {
               </div>
             </div>
           </motion.div>
-        ))}
-      </AnimatePresence>
+        )}
+      />
     </motion.div>
   );
 }

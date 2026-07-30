@@ -2,7 +2,8 @@
 
 import { Skill, Language, DrivingLicense, DRIVING_CATEGORIES } from "@/types/cv";
 import { Theme } from "@/types/theme";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
+import DraggableList from "@/components/ui/DraggableList";
 import { Trash, CopySimple } from "@phosphor-icons/react";
 import { DBInput, DBSelect, AddButton, SectionHeader } from "@/components/ui/fields";
 
@@ -93,16 +94,21 @@ export default function SkillsSection({ skills, languages, drivingLicenses, onSk
           <AddButton onClick={() => onSkillsChange([...skills, newSkill()])} theme={theme} />
         </div>
         {skills.length === 0 && <p className={emptyClass}>Nicio competență adăugată</p>}
-        <AnimatePresence>
-          {skills.map((s) => (
-            <motion.div key={s.id} variants={ROW} initial="hidden" animate="visible" exit="exit" className="flex items-start gap-2">
+        <DraggableList
+          items={skills}
+          onChange={onSkillsChange}
+          getId={(s) => s.id}
+          theme={theme}
+          scope="skills"
+          renderItem={(s) => (
+            <motion.div key={s.id} variants={ROW} initial="hidden" animate="visible" className="flex items-start gap-2">
               <div className="flex-1"><DBInput value={s.name} onChange={(v) => updateSkill(s.id, "name", v)} placeholder="React, Python, Figma..." theme={theme} /></div>
               <DBSelect value={s.level} onChange={(v) => updateSkill(s.id, "level", v)} options={["Începător", "Mediu", "Avansat", "Expert"]} theme={theme} />
               <CopyButton onClick={() => duplicateSkill(s.id)} theme={theme} label={`Duplică competența ${s.name || "fără nume"}`} />
               <DeleteButton onClick={() => onSkillsChange(skills.filter((x) => x.id !== s.id))} theme={theme} label={`Șterge competența ${s.name || "fără nume"}`} />
             </motion.div>
-          ))}
-        </AnimatePresence>
+          )}
+        />
       </div>
 
       {divider}
@@ -114,16 +120,21 @@ export default function SkillsSection({ skills, languages, drivingLicenses, onSk
           <AddButton onClick={() => onLanguagesChange([...languages, newLang()])} theme={theme} />
         </div>
         {languages.length === 0 && <p className={emptyClass}>Nicio limbă adăugată</p>}
-        <AnimatePresence>
-          {languages.map((l) => (
-            <motion.div key={l.id} variants={ROW} initial="hidden" animate="visible" exit="exit" className="flex items-start gap-2">
+        <DraggableList
+          items={languages}
+          onChange={onLanguagesChange}
+          getId={(l) => l.id}
+          theme={theme}
+          scope="langs"
+          renderItem={(l) => (
+            <motion.div key={l.id} variants={ROW} initial="hidden" animate="visible" className="flex items-start gap-2">
               <div className="flex-1"><DBInput value={l.name} onChange={(v) => updateLang(l.id, "name", v)} placeholder="Engleză, Franceză..." theme={theme} /></div>
               <DBSelect value={l.level} onChange={(v) => updateLang(l.id, "level", v)} options={["A1", "A2", "B1", "B2", "C1", "C2", "Nativ"]} theme={theme} />
               <CopyButton onClick={() => duplicateLang(l.id)} theme={theme} label={`Duplică limba ${l.name || "fără nume"}`} />
               <DeleteButton onClick={() => onLanguagesChange(languages.filter((x) => x.id !== l.id))} theme={theme} label={`Șterge limba ${l.name || "fără nume"}`} />
             </motion.div>
-          ))}
-        </AnimatePresence>
+          )}
+        />
       </div>
 
       {divider}
@@ -135,16 +146,21 @@ export default function SkillsSection({ skills, languages, drivingLicenses, onSk
           <AddButton onClick={() => onDrivingChange([...drivingLicenses, newLicense()])} theme={theme} />
         </div>
         {drivingLicenses.length === 0 && <p className={emptyClass}>Nicio categorie adăugată</p>}
-        <AnimatePresence>
-          {drivingLicenses.map((d) => (
-            <motion.div key={d.id} variants={ROW} initial="hidden" animate="visible" exit="exit" className="flex items-start gap-2">
+        <DraggableList
+          items={drivingLicenses}
+          onChange={onDrivingChange}
+          getId={(d) => d.id}
+          theme={theme}
+          scope="driving"
+          renderItem={(d) => (
+            <motion.div key={d.id} variants={ROW} initial="hidden" animate="visible" className="flex items-start gap-2">
               <DBSelect value={d.category} onChange={(v) => updateLicense(d.id, "category", v)} options={[...DRIVING_CATEGORIES]} theme={theme} />
               <div className="flex-1"><DBInput value={d.year} onChange={(v) => updateLicense(d.id, "year", v)} placeholder="Anul obținerii (ex: 2015)" theme={theme} /></div>
               <CopyButton onClick={() => duplicateLicense(d.id)} theme={theme} label={`Duplică categoria ${d.category}`} />
               <DeleteButton onClick={() => onDrivingChange(drivingLicenses.filter((x) => x.id !== d.id))} theme={theme} label={`Șterge categoria ${d.category}`} />
             </motion.div>
-          ))}
-        </AnimatePresence>
+          )}
+        />
       </div>
     </motion.div>
   );

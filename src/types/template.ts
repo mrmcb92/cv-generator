@@ -1,4 +1,4 @@
-export type TemplateId = "classic" | "modern" | "minimal" | "creative";
+export type TemplateId = "classic" | "modern" | "minimal" | "creative" | "academic" | "executive";
 
 export interface CVTemplate {
   id: TemplateId;
@@ -13,4 +13,6 @@ export const cvTemplates: CVTemplate[] = [
   { id: "modern",   name: "Modern",   description: "Sidebar colorat, layout bicolumnar", accent: "#0f172a" },
   { id: "minimal",  name: "Minimal",  description: "Tipografie pură, spațiu alb", accent: "#71717a" },
   { id: "creative", name: "Creative", description: "Accent bold, design editorial", accent: "#0369a1" },
+  { id: "academic", name: "Academic",  description: "Publicații, conferințe, research", accent: "#6d28d9" },
+  { id: "executive",name: "Executive", description: "Compact, one-page, leadership", accent: "#b91c1c" },
 ];

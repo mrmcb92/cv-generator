@@ -16,6 +16,7 @@ import TemplatePicker   from "@/components/TemplatePicker";
 import ToastStack       from "@/components/ToastStack";
 import { useToast }     from "@/hooks/useToast";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { cvTemplates, TemplateId } from "@/types/template";
 import { CvLang } from "@/lib/cvLabels";
 import { themes, ThemeId } from "@/types/theme";
@@ -23,6 +24,7 @@ import {
   FilePdf, FileDoc, FileHtml, FileArrowDown, UploadSimple,
   User, Briefcase, GraduationCap, Star, Stack,
   ArrowUpRight, Circle, Plus, PencilSimple, Trash, List, X,
+  CaretLeft, CaretRight,
 } from "@phosphor-icons/react";
 
 const EXPORTS = [
@@ -100,7 +102,7 @@ function saveProfilesStore(store: ProfilesStore) {
 
 function App() {
   const { theme } = useTheme();
-  const [cv, setCv]               = useState<CVData>(defaultCV);
+  const { state: cv, setState: setCv, undo, redo, canUndo, canRedo, replaceState } = useUndoRedo<CVData>(defaultCV);
   const [activeTab, setActiveTab] = useState<Tab>("personal");
   const [templateId, setTemplateId] = useState<TemplateId>("classic");
   const [cvLang, setCvLang]       = useState<CvLang>("ro");
@@ -114,6 +116,8 @@ function App() {
     "Ctrl+4": () => setActiveTab("skills"),
     "Ctrl+5": () => setActiveTab("other"),
     "Ctrl+S": () => handleSaveJson(),
+    "Ctrl+Z": () => undo(),
+    "Ctrl+Shift+Z": () => redo(),
   });
 
   const [profiles, setProfiles] = useState<{ id: string; name: string }[]>([]);
@@ -135,7 +139,7 @@ function App() {
     setProfiles(store.profiles.map(({ id, name }) => ({ id, name })));
     setActiveProfileId(active.id);
     const valid = validateCV(active.data);
-    if (valid) setCv(valid);
+    if (valid) replaceState(valid);
 
     const tpl = localStorage.getItem(LS_TEMPLATE_KEY) as TemplateId | null;
     if (tpl && cvTemplates.some((t) => t.id === tpl)) setTemplateId(tpl);
@@ -182,7 +186,7 @@ function App() {
     if (!target) return;
     saveProfilesStore(updated);
     setActiveProfileId(id);
-    setCv(validateCV(target.data) ?? { ...defaultCV });
+    replaceState(validateCV(target.data) ?? { ...defaultCV });
   };
 
   const newProfile = () => {
@@ -202,7 +206,7 @@ function App() {
     saveProfilesStore(updated);
     setProfiles(updated.profiles.map(({ id: i, name: n }) => ({ id: i, name: n })));
     setActiveProfileId(id);
-    setCv({ ...defaultCV });
+    replaceState({ ...defaultCV });
     showToast(`Profil „${name}" creat`);
   };
 
@@ -235,7 +239,7 @@ function App() {
     saveProfilesStore(updated);
     setProfiles(remaining.map(({ id, name }) => ({ id, name })));
     setActiveProfileId(next.id);
-    setCv(validateCV(next.data) ?? { ...defaultCV });
+    replaceState(validateCV(next.data) ?? { ...defaultCV });
     showToast("Profil șters");
   };
 
@@ -256,7 +260,7 @@ function App() {
         }
       } catch { data = null; }
       if (data) {
-        setCv(data);
+        replaceState(data);
         showToast("CV importat cu succes");
       } else {
         showToast("Fișierul nu conține date de CV valide", "error");
@@ -390,6 +394,18 @@ function App() {
 
           <div className="flex-1" />
 
+          {/* Undo / Redo buttons */}
+          <button onClick={undo} disabled={!canUndo}
+            className={`w-7 h-7 rounded-full flex items-center justify-center disabled:opacity-30 transition-colors ${isDark ? "text-zinc-500 hover:text-white hover:bg-white/10" : "text-zinc-400 hover:text-zinc-900 hover:bg-black/8"}`}
+            title="Undo (Ctrl+Z)">
+            <CaretLeft size={12} weight="bold" />
+          </button>
+          <button onClick={redo} disabled={!canRedo}
+            className={`w-7 h-7 rounded-full flex items-center justify-center disabled:opacity-30 transition-colors ${isDark ? "text-zinc-500 hover:text-white hover:bg-white/10" : "text-zinc-400 hover:text-zinc-900 hover:bg-black/8"}`}
+            title="Redo (Ctrl+Shift+Z)">
+            <CaretRight size={12} weight="bold" />
+          </button>
+
           {/* Import + Save buttons */}
           <button
             onClick={() => importRef.current?.click()}
@@ -431,6 +447,31 @@ function App() {
               </span>
             </button>
           ))}
+          {/* Export RO+EN shortcut */}
+          <button
+            onClick={async () => {
+              setExporting("pdf");
+              try {
+                const { exportToPdf } = await import("@/lib/exportPdf");
+                if (cvLang === "ro") {
+                  await exportToPdf(cv.personal.lastName, cv, templateId, "ro");
+                  await exportToPdf(cv.personal.lastName, cv, templateId, "en");
+                } else {
+                  await exportToPdf(cv.personal.lastName, cv, templateId, "en");
+                  await exportToPdf(cv.personal.lastName, cv, templateId, "ro");
+                }
+                showToast("PDF exportat în RO și EN");
+              } catch {
+                showToast("Exportul bilingv a eșuat", "error");
+              } finally { setExporting(null); }
+            }}
+            disabled={exporting !== null}
+            title="Exportă PDF în ambele limbi"
+            className="group flex items-center gap-2 text-white text-[11px] font-semibold pl-3 pr-1 py-1 rounded-full disabled:opacity-40 transition-all duration-300 active:scale-[0.97] bg-purple-500/90 hover:bg-purple-500"
+            style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)" }}
+          >
+            RO/EN
+          </button>
         </div>
 
         {/* ── Mobile menu button (below lg) ── */}

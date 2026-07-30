@@ -5,6 +5,7 @@ import { Theme } from "@/types/theme";
 import { motion, AnimatePresence } from "motion/react";
 import { Plus, Trash, Briefcase, CopySimple } from "@phosphor-icons/react";
 import { DBInput, AddButton, SectionHeader, fieldLabelClass } from "@/components/ui/fields";
+import DraggableList from "@/components/ui/DraggableList";
 import DateInput from "@/components/ui/DateInput";
 import SuggestionChips from "@/components/ui/SuggestionChips";
 import { isDateRangeInvalid } from "@/lib/fieldValidation";
@@ -95,8 +96,13 @@ export default function ExperienceSection({ data, onChange, theme }: Props) {
         </motion.div>
       )}
 
-      <AnimatePresence>
-        {data.map((entry, idx) => (
+      <DraggableList
+        items={data}
+        onChange={onChange}
+        getId={(e: WorkExperience) => e.id}
+        theme={theme}
+        scope="exp"
+        renderItem={(entry: WorkExperience, idx: number) => (
           <motion.div key={entry.id} variants={ITEM} initial="hidden" animate="visible" exit="exit"
             className={`rounded-2xl overflow-hidden ${isDark ? "bg-white/[0.03] ring-1 ring-white/[0.06]" : "bg-black/[0.02] ring-1 ring-black/[0.05]"}`}
             style={{ boxShadow: isDark ? "inset 0 1px 0 rgba(255,255,255,0.04)" : "inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 8px rgba(0,0,0,0.04)" }}
@@ -187,8 +193,8 @@ export default function ExperienceSection({ data, onChange, theme }: Props) {
               </div>
             </div>
           </motion.div>
-        ))}
-      </AnimatePresence>
+        )}
+      />
     </motion.div>
   );
 }

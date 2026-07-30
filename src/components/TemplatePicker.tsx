@@ -98,6 +98,53 @@ const TEMPLATE_THUMBS: Record<TemplateId, React.ReactNode> = {
       <rect x="24" y="38" width="8" height="3" rx="1" fill="#f0f9ff" stroke="#bae6fd" strokeWidth="0.4"/>
     </svg>
   ),
+  academic: (
+    <svg viewBox="0 0 40 52" className="w-full h-full">
+      <rect width="40" height="52" fill="white"/>
+      <rect width="40" height="14" fill="#6d28d9"/>
+      <rect x="4" y="3" width="16" height="2.5" rx="1" fill="white" opacity="0.9"/>
+      <rect x="4" y="7" width="10" height="1.5" rx="0.5" fill="white" opacity="0.5"/>
+      <rect x="4" y="17" width="32" height="0.8" rx="0.3" fill="#e2e8f0"/>
+      <rect x="4" y="20" width="3" height="3" rx="0.5" fill="#6d28d9"/>
+      <rect x="9" y="21" width="22" height="0.8" rx="0.3" fill="#cbd5e1"/>
+      <rect x="9" y="23" width="14" height="0.7" rx="0.3" fill="#a1a1aa"/>
+      <rect x="4" y="26" width="3" height="10" rx="0.5" fill="#ddd6fe" opacity="0.6"/>
+      <rect x="9" y="27" width="14" height="1" rx="0.4" fill="#1e293b"/>
+      <rect x="9" y="29.5" width="10" height="0.8" rx="0.3" fill="#6d28d9" opacity="0.7"/>
+      <rect x="9" y="31.5" width="22" height="0.6" rx="0.3" fill="#d1d5db"/>
+      <rect x="9" y="33.5" width="18" height="0.6" rx="0.3" fill="#d1d5db"/>
+      <rect x="4" y="39" width="3" height="2" rx="0.5" fill="#6d28d9"/>
+      <rect x="9" y="39.5" width="8" height="0.7" rx="0.3" fill="#6d28d9" opacity="0.8"/>
+      <rect x="4" y="44" width="10" height="1.2" rx="0.4" fill="#1e293b" opacity="0.9"/>
+      <rect x="16" y="44" width="8" height="1.2" rx="0.4" fill="#1e293b" opacity="0.9"/>
+      <rect x="26" y="44" width="10" height="1.2" rx="0.4" fill="#1e293b" opacity="0.9"/>
+    </svg>
+  ),
+  executive: (
+    <svg viewBox="0 0 40 52" className="w-full h-full">
+      <rect width="40" height="52" fill="white"/>
+      <rect width="40" height="2" fill="#b91c1c"/>
+      <rect x="4" y="5" width="22" height="3.5" rx="0.8" fill="#1e293b" opacity="0.9"/>
+      <rect x="4" y="10" width="12" height="1.2" rx="0.4" fill="#94a3b8"/>
+      <rect x="4" y="12.5" width="30" height="0.6" rx="0.2" fill="#e2e8f0"/>
+      <rect x="4" y="14.5" width="32" height="0.5" rx="0.2" fill="#f1f5f9"/>
+      <rect x="4" y="17" width="8" height="0.7" rx="0.3" fill="#b91c1c"/>
+      <rect x="4" y="19" width="32" height="0.9" rx="0.3" fill="#1e293b"/>
+      <rect x="4" y="21" width="28" height="0.7" rx="0.3" fill="#b91c1c" opacity="0.5"/>
+      <rect x="4" y="23.5" width="30" height="0.5" rx="0.2" fill="#d1d5db"/>
+      <rect x="4" y="25.5" width="30" height="0.5" rx="0.2" fill="#d1d5db"/>
+      <rect x="4" y="28.5" width="8" height="0.7" rx="0.3" fill="#b91c1c"/>
+      <rect x="4" y="30.5" width="32" height="0.9" rx="0.3" fill="#1e293b"/>
+      <rect x="4" y="32.5" width="24" height="0.7" rx="0.3" fill="#b91c1c" opacity="0.5"/>
+      <rect x="4" y="35" width="28" height="0.5" rx="0.2" fill="#d1d5db"/>
+      <rect x="4" y="37" width="28" height="0.5" rx="0.2" fill="#d1d5db"/>
+      <rect x="4" y="40" width="8" height="0.7" rx="0.3" fill="#b91c1c"/>
+      <rect x="4" y="42" width="14" height="0.8" rx="0.3" fill="#94a3b8"/>
+      <rect x="20" y="42" width="8" height="0.8" rx="0.3" fill="#94a3b8"/>
+      <rect x="4" y="44.5" width="10" height="0.6" rx="0.2" fill="#cbd5e1"/>
+      <rect x="18" y="44.5" width="10" height="0.6" rx="0.2" fill="#cbd5e1"/>
+    </svg>
+  ),
 };
 
 // Larger preview for hover tooltip (~3x scale)
@@ -192,6 +239,53 @@ const TEMPLATE_PREVIEW_HOVER: Record<TemplateId, React.ReactNode> = {
       <rect x="4" y="38" width="8" height="3" rx="1" fill="#f0f9ff" stroke="#bae6fd" strokeWidth="0.4"/>
       <rect x="14" y="38" width="8" height="3" rx="1" fill="#f0f9ff" stroke="#bae6fd" strokeWidth="0.4"/>
       <rect x="24" y="38" width="8" height="3" rx="1" fill="#f0f9ff" stroke="#bae6fd" strokeWidth="0.4"/>
+    </svg>
+  ),
+  academic: (
+    <svg viewBox="0 0 40 52" className="w-full h-full">
+      <rect width="40" height="52" fill="white"/>
+      <rect width="40" height="14" fill="#6d28d9"/>
+      <rect x="4" y="3" width="16" height="2.5" rx="1" fill="white" opacity="0.9"/>
+      <rect x="4" y="7" width="10" height="1.5" rx="0.5" fill="white" opacity="0.5"/>
+      <rect x="4" y="17" width="32" height="0.8" rx="0.3" fill="#e2e8f0"/>
+      <rect x="4" y="20" width="3" height="3" rx="0.5" fill="#6d28d9"/>
+      <rect x="9" y="21" width="22" height="0.8" rx="0.3" fill="#cbd5e1"/>
+      <rect x="9" y="23" width="14" height="0.7" rx="0.3" fill="#a1a1aa"/>
+      <rect x="4" y="26" width="3" height="10" rx="0.5" fill="#ddd6fe" opacity="0.6"/>
+      <rect x="9" y="27" width="14" height="1" rx="0.4" fill="#1e293b"/>
+      <rect x="9" y="29.5" width="10" height="0.8" rx="0.3" fill="#6d28d9" opacity="0.7"/>
+      <rect x="9" y="31.5" width="22" height="0.6" rx="0.3" fill="#d1d5db"/>
+      <rect x="9" y="33.5" width="18" height="0.6" rx="0.3" fill="#d1d5db"/>
+      <rect x="4" y="39" width="3" height="2" rx="0.5" fill="#6d28d9"/>
+      <rect x="9" y="39.5" width="8" height="0.7" rx="0.3" fill="#6d28d9" opacity="0.8"/>
+      <rect x="4" y="44" width="10" height="1.2" rx="0.4" fill="#1e293b" opacity="0.9"/>
+      <rect x="16" y="44" width="8" height="1.2" rx="0.4" fill="#1e293b" opacity="0.9"/>
+      <rect x="26" y="44" width="10" height="1.2" rx="0.4" fill="#1e293b" opacity="0.9"/>
+    </svg>
+  ),
+  executive: (
+    <svg viewBox="0 0 40 52" className="w-full h-full">
+      <rect width="40" height="52" fill="white"/>
+      <rect width="40" height="2" fill="#b91c1c"/>
+      <rect x="4" y="5" width="22" height="3.5" rx="0.8" fill="#1e293b" opacity="0.9"/>
+      <rect x="4" y="10" width="12" height="1.2" rx="0.4" fill="#94a3b8"/>
+      <rect x="4" y="12.5" width="30" height="0.6" rx="0.2" fill="#e2e8f0"/>
+      <rect x="4" y="14.5" width="32" height="0.5" rx="0.2" fill="#f1f5f9"/>
+      <rect x="4" y="17" width="8" height="0.7" rx="0.3" fill="#b91c1c"/>
+      <rect x="4" y="19" width="32" height="0.9" rx="0.3" fill="#1e293b"/>
+      <rect x="4" y="21" width="28" height="0.7" rx="0.3" fill="#b91c1c" opacity="0.5"/>
+      <rect x="4" y="23.5" width="30" height="0.5" rx="0.2" fill="#d1d5db"/>
+      <rect x="4" y="25.5" width="30" height="0.5" rx="0.2" fill="#d1d5db"/>
+      <rect x="4" y="28.5" width="8" height="0.7" rx="0.3" fill="#b91c1c"/>
+      <rect x="4" y="30.5" width="32" height="0.9" rx="0.3" fill="#1e293b"/>
+      <rect x="4" y="32.5" width="24" height="0.7" rx="0.3" fill="#b91c1c" opacity="0.5"/>
+      <rect x="4" y="35" width="28" height="0.5" rx="0.2" fill="#d1d5db"/>
+      <rect x="4" y="37" width="28" height="0.5" rx="0.2" fill="#d1d5db"/>
+      <rect x="4" y="40" width="8" height="0.7" rx="0.3" fill="#b91c1c"/>
+      <rect x="4" y="42" width="14" height="0.8" rx="0.3" fill="#94a3b8"/>
+      <rect x="20" y="42" width="8" height="0.8" rx="0.3" fill="#94a3b8"/>
+      <rect x="4" y="44.5" width="10" height="0.6" rx="0.2" fill="#cbd5e1"/>
+      <rect x="18" y="44.5" width="10" height="0.6" rx="0.2" fill="#cbd5e1"/>
     </svg>
   ),
 };
