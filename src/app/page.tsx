@@ -340,8 +340,12 @@ function App() {
 
       {/* ── Navbar ── */}
       <header
-        className={`relative z-40 flex-shrink-0 ${theme.navBg} flex items-center px-4 sm:px-5 h-[52px] gap-4`}
-        style={{ boxShadow: "0 1px 0 rgba(255,255,255,0.05)" }}
+        className={`relative z-40 flex-shrink-0 ${theme.navBg} flex items-center px-4 sm:px-5 gap-4`}
+        style={{
+          boxShadow: "0 1px 0 rgba(255,255,255,0.05)",
+          paddingTop: "env(safe-area-inset-top, 0px)",
+          height: "calc(52px + env(safe-area-inset-top, 0px))",
+        }}
       >
         <div className="flex items-center gap-2 mr-auto lg:mr-1">
           <div className={`w-5 h-5 rounded-md flex items-center justify-center ${isDark ? "bg-cyan-400/20" : "bg-white/15"}`}>
@@ -489,8 +493,18 @@ function App() {
       {/* ── Mobile menu sheet (below lg) ── */}
       {menuOpen && (
         <div className="lg:hidden">
-          <div className="fixed inset-x-0 bottom-0 top-[52px] z-30 bg-black/50" onClick={() => setMenuOpen(false)} />
-          <div className={`fixed top-[52px] inset-x-0 z-40 max-h-[calc(100vh-52px)] overflow-y-auto px-4 py-4 space-y-5 border-t border-white/10 shadow-2xl ${theme.navBg}`}>
+          <div
+            className="fixed inset-x-0 bottom-0 z-30 bg-black/50"
+            style={{ top: "calc(52px + env(safe-area-inset-top, 0px))" }}
+            onClick={() => setMenuOpen(false)}
+          />
+          <div
+            className={`fixed inset-x-0 z-40 overflow-y-auto px-4 py-4 space-y-5 border-t border-white/10 shadow-2xl ${theme.navBg}`}
+            style={{
+              top: "calc(52px + env(safe-area-inset-top, 0px))",
+              maxHeight: "calc(100dvh - 52px - env(safe-area-inset-top, 0px))",
+            }}
+          >
             {/* Export */}
             <section>
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">Exportă CV</p>
