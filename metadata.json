@@ -1,0 +1,6 @@
+{
+  "name": "Generator CV",
+  "description": "Creează, editează și exportă CV-ul tău în PDF, Word și HTML — direct din browser.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

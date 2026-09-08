@@ -8,7 +8,9 @@ interface ShortcutMap {
 export function useKeyboardShortcuts(shortcuts: ShortcutMap) {
   // Store latest callbacks in a ref so the effect doesn't re-run on every render
   const shortcutsRef = useRef<ShortcutMap>(shortcuts);
-  shortcutsRef.current = shortcuts;
+  useEffect(() => {
+    shortcutsRef.current = shortcuts;
+  });
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
