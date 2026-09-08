@@ -29,6 +29,7 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ data, lang = "
           {personal.phone && <span>• {personal.phone}</span>}
           {personal.location && <span>• {personal.location}</span>}
           {personal.website && <span>• {personal.website}</span>}
+          {personal.linkedin && <span>• {personal.linkedin}</span>}
         </div>
       </header>
 
@@ -92,7 +93,10 @@ export const ClassicTemplate: React.FC<ClassicTemplateProps> = ({ data, lang = "
                     {fmtDate(edu.startDate, lang)} – {fmtDate(edu.endDate, lang)}
                   </span>
                 </div>
-                <div className="text-xs font-semibold text-gray-700">{edu.institution}</div>
+                <div className="text-xs font-semibold text-gray-700">
+                  {edu.institution}
+                  {edu.gpa && <span className="font-normal text-gray-500"> · Medie: {edu.gpa}</span>}
+                </div>
               </div>
             ))}
           </div>

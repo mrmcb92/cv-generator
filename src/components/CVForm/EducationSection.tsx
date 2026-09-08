@@ -106,6 +106,10 @@ export default function EducationSection({ data, onChange, theme }: Props) {
                 <DateInput value={entry.endDate} onChange={(v) => update(entry.id, "endDate", v)} theme={theme}
                   invalid={isDateRangeInvalid(entry.startDate, entry.endDate)} hint="Data de sfârșit e înaintea celei de început" />
               </div>
+              <div className="col-span-2">
+                <label className={labelClass}>Medie / GPA (opțional)</label>
+                <DBInput value={entry.gpa ?? ""} onChange={(v) => update(entry.id, "gpa", v)} placeholder="ex: 9.80 sau 3.9/4.0" theme={theme} />
+              </div>
             </div>
           </motion.div>
         )}

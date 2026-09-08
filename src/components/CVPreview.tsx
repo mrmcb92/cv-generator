@@ -19,7 +19,7 @@ interface Props {
 
 // Dashed overlay marking where each A4 page ends, so the user can see
 // whether the CV still fits on one page. Lines repeat every 297mm.
-function PageBreakGuide() {
+function PageBreakGuide({ lang }: { lang: CvLang }) {
   return (
     <div
       aria-hidden
@@ -33,7 +33,7 @@ function PageBreakGuide() {
         className="absolute right-1 text-[9px] font-semibold uppercase tracking-wider text-rose-400/90 bg-white/80 px-1.5 py-0.5 rounded"
         style={{ top: "calc(297mm + 2px)" }}
       >
-        Pagina 2
+        {lang === "en" ? "Page 2" : "Pagina 2"}
       </span>
     </div>
   );
@@ -61,7 +61,7 @@ export default function CVPreview({ data, templateId, lang = "ro" }: Props) {
         style={{ maxHeight: 1120 }}
       >
         {template}
-        <PageBreakGuide />
+        <PageBreakGuide lang={lang} />
       </div>
     </div>
   );

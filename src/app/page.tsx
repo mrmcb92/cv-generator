@@ -19,7 +19,7 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { cvTemplates, TemplateId } from "@/types/template";
 import { CvLang } from "@/lib/cvLabels";
-import { themes, ThemeId } from "@/types/theme";
+import { ThemeId } from "@/types/theme";
 import {
   FilePdf, FileDoc, FileHtml, FileArrowDown, UploadSimple,
   User, Briefcase, GraduationCap, Star, Stack,
@@ -136,6 +136,7 @@ function App() {
       saveProfilesStore(store);
     }
     const active = store.profiles.find((p) => p.id === store.activeId) ?? store.profiles[0];
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProfiles(store.profiles.map(({ id, name }) => ({ id, name })));
     setActiveProfileId(active.id);
     const valid = validateCV(active.data);
@@ -145,7 +146,7 @@ function App() {
     if (tpl && cvTemplates.some((t) => t.id === tpl)) setTemplateId(tpl);
     const lng = localStorage.getItem(LS_LANG_KEY);
     if (lng === "ro" || lng === "en") setCvLang(lng);
-  }, []);
+  }, [replaceState]);
 
   const changeTemplate = (id: TemplateId) => {
     setTemplateId(id);
@@ -285,7 +286,7 @@ function App() {
   };
 
   // Warn if key sections are empty before export
-  const checkBeforeExport = (type: string): boolean => {
+  const checkBeforeExport = (): boolean => {
     const fullName = `${cv.personal.firstName} ${cv.personal.lastName}`.trim();
     const hasName = fullName.length > 0;
     const hasExperience = cv.experience.some((e) => e.company || e.positions.some((p) => p.title));
@@ -305,7 +306,7 @@ function App() {
   };
 
   const handleExport = async (type: "pdf" | "docx" | "html") => {
-    if (!checkBeforeExport(type)) return;
+    if (!checkBeforeExport()) return;
     setExporting(type);
     try {
       if (type === "pdf") {

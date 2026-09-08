@@ -37,7 +37,8 @@ const LEVEL_W: Record<string, string> = {
 const classicS = StyleSheet.create({
   page:        { backgroundColor: "#ffffff", fontFamily: "Roboto", fontSize: 11 },
   header:      { backgroundColor: "#1e293b", padding: "28 32" },
-  name:        { fontSize: 26, fontWeight: "bold", color: "#ffffff", marginBottom: 8 },
+  name:        { fontSize: 26, fontWeight: "bold", color: "#ffffff", marginBottom: 2 },
+  title:       { fontSize: 12, color: "#cbd5e1", marginBottom: 8 },
   contactRow:  { flexDirection: "row", flexWrap: "wrap", gap: "0 20" },
   contactItem: { fontSize: 10, color: "#94a3b8" },
   body:        { padding: "24 32" },
@@ -71,6 +72,7 @@ function ClassicPdf({ data, lang }: { data: CVData; lang: CvLang }) {
             <Text style={classicS.name}>
               {`${p.firstName} ${p.lastName}`.trim() || "Nume Prenume"}
             </Text>
+            {p.title ? <Text style={classicS.title}>{p.title}</Text> : null}
             <View style={classicS.contactRow}>
               {p.email    && <Link src={`mailto:${p.email}`} style={classicS.contactItem}>{p.email}</Link>}
               {p.phone    && <Link src={`tel:${p.phone}`} style={classicS.contactItem}>{p.phone}</Link>}
@@ -119,7 +121,7 @@ function ClassicPdf({ data, lang }: { data: CVData; lang: CvLang }) {
                 <View key={e.id} wrap={false} style={[classicS.expItem, { marginBottom: 6 }]}>
                   <View style={classicS.expRow}>
                     <Text style={classicS.expTitle}>
-                      {e.degree}{e.field ? ` ${L.inWord} ${e.field}` : ""}{e.institution ? `  ·  ${e.institution}` : ""}
+                      {e.degree}{e.field ? ` ${L.inWord} ${e.field}` : ""}{e.institution ? `  ·  ${e.institution}` : ""}{e.gpa ? `  ·  Medie: ${e.gpa}` : ""}
                     </Text>
                     <Text style={classicS.expDate}>
                       {fmtDate(e.startDate)} – {fmtDate(e.endDate)}
@@ -197,7 +199,8 @@ const modernS = StyleSheet.create({
   sidebarBg: { position: "absolute", top: 0, bottom: 0, left: 0, width: "35%", backgroundColor: "#1e293b" },
   sidebar:   { width: "35%", paddingTop: 26, paddingBottom: 0, paddingHorizontal: 20 },
   nameFirst: { fontSize: 22, fontWeight: "bold", color: "#38bdf8", lineHeight: 1.1 },
-  nameLast:  { fontSize: 22, fontWeight: "bold", color: "#ffffff", lineHeight: 1.1, marginBottom: 14 },
+  nameLast:  { fontSize: 22, fontWeight: "bold", color: "#ffffff", lineHeight: 1.1 },
+  title:     { fontSize: 10, color: "#7dd3fc", marginTop: 4, marginBottom: 8 },
   sideSecTitle: { fontSize: 9, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1.6,
                   color: "#38bdf8", marginTop: 14, marginBottom: 6 },
   contactItem: { fontSize: 10, color: "#94a3b8", marginBottom: 3 },
@@ -233,10 +236,12 @@ function ModernPdf({ data, lang }: { data: CVData; lang: CvLang }) {
         <View style={modernS.sidebarBg} fixed />
         <View style={modernS.sidebar}>
           {p.photo ? (
+            /* eslint-disable-next-line jsx-a11y/alt-text */
             <Image src={p.photo} style={{ width: 76, height: 76, borderRadius: 38, marginBottom: 12 }} />
           ) : null}
           <Text style={modernS.nameFirst}>{p.firstName || "Prenume"}</Text>
           <Text style={modernS.nameLast}>{p.lastName || "Nume"}</Text>
+          {p.title ? <Text style={modernS.title}>{p.title}</Text> : null}
           <Text style={modernS.sideSecTitle}>Contact</Text>
           {p.email    && <Link src={`mailto:${p.email}`} style={modernS.contactItem}>{p.email}</Link>}
           {p.phone    && <Link src={`tel:${p.phone}`} style={modernS.contactItem}>{p.phone}</Link>}
@@ -323,7 +328,11 @@ function ModernPdf({ data, lang }: { data: CVData; lang: CvLang }) {
                       {fmtDate(e.startDate)} – {fmtDate(e.endDate)}
                     </Text>
                   </View>
-                  {e.institution && <Text style={[modernS.expComp, { fontSize: 10 }]}>{e.institution}</Text>}
+                  {e.institution && (
+                    <Text style={[modernS.expComp, { fontSize: 10 }]}>
+                      {e.institution}{e.gpa ? ` · Medie: ${e.gpa}` : ""}
+                    </Text>
+                  )}
                 </View>
               ))}
             </View>
@@ -357,6 +366,7 @@ const minimalS = StyleSheet.create({
                  padding: "40 48" },
   name:        { fontSize: 30, fontWeight: "normal", color: "#18181b", letterSpacing: -0.5,
                  lineHeight: 1, marginBottom: 6 },
+  title:       { fontSize: 10, fontWeight: "bold", color: "#71717a", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8 },
   contactLine: { fontSize: 10, color: "#a1a1aa", letterSpacing: 0.5, marginBottom: 16 },
   rule:        { height: 1, backgroundColor: "#e4e4e7", marginBottom: 18 },
   summaryTxt:  { fontSize: 11, color: "#52525b", lineHeight: 1.7, marginBottom: 18 },
@@ -394,6 +404,7 @@ function MinimalPdf({ data, lang }: { data: CVData; lang: CvLang }) {
     <Document>
       <Page size="A4" style={minimalS.page}>
         <Text style={minimalS.name}>{name}</Text>
+        {p.title ? <Text style={minimalS.title}>{p.title}</Text> : null}
         {contactLine.length > 0 && (
           <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
             {contactLine}
@@ -434,7 +445,11 @@ function MinimalPdf({ data, lang }: { data: CVData; lang: CvLang }) {
                   <Text style={minimalS.expTitle}>
                     {e.degree}{e.field ? `, ${e.field}` : ""}
                   </Text>
-                  {e.institution && <Text style={minimalS.expSub}>{e.institution}</Text>}
+                  {e.institution && (
+                    <Text style={minimalS.expSub}>
+                      {e.institution}{e.gpa ? ` · Medie: ${e.gpa}` : ""}
+                    </Text>
+                  )}
                 </View>
                 <View>
                   <Text style={minimalS.expDate}>{fmtDate(e.startDate)}</Text>
@@ -498,6 +513,7 @@ const creativeS = StyleSheet.create({
                  borderBottomWidth: 1, borderBottomColor: "#f1f5f9" },
   nameFirst:   { fontSize: 26, fontWeight: "bold", color: "#0ea5e9", lineHeight: 1 },
   nameLast:    { fontSize: 26, fontWeight: "bold", color: "#18181b", lineHeight: 1 },
+  title:       { fontSize: 11, fontWeight: "medium", color: "#0284c7", marginTop: 4 },
   contactBlock: { alignItems: "flex-end", gap: 2 },
   contactItem:  { fontSize: 10, color: "#71717a" },
   body:        { padding: "20 32" },
@@ -545,6 +561,7 @@ function CreativePdf({ data, lang }: { data: CVData; lang: CvLang }) {
           <View>
             <Text style={creativeS.nameFirst}>{p.firstName || "Prenume"}</Text>
             <Text style={creativeS.nameLast}>{p.lastName || "Nume"}</Text>
+            {p.title ? <Text style={creativeS.title}>{p.title}</Text> : null}
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <View style={creativeS.contactBlock}>
@@ -555,6 +572,7 @@ function CreativePdf({ data, lang }: { data: CVData; lang: CvLang }) {
               {p.linkedin && <Link  src={p.linkedin.startsWith('http') ? p.linkedin : `https://${p.linkedin}`} style={creativeS.contactItem}>{p.linkedin}</Link>}
             </View>
             {p.photo ? (
+              /* eslint-disable-next-line jsx-a11y/alt-text */
               <Image src={p.photo} style={{ width: 56, height: 56, borderRadius: 28 }} />
             ) : null}
           </View>
@@ -602,7 +620,11 @@ function CreativePdf({ data, lang }: { data: CVData; lang: CvLang }) {
                     <Text style={creativeS.eduTitle}>
                       {e.degree}{e.field ? ` · ${e.field}` : ""}
                     </Text>
-                    {e.institution && <Text style={creativeS.eduSub}>{e.institution}</Text>}
+                    {e.institution && (
+                      <Text style={creativeS.eduSub}>
+                        {e.institution}{e.gpa ? ` · Medie: ${e.gpa}` : ""}
+                      </Text>
+                    )}
                   </View>
                   <Text style={creativeS.eduDate}>
                     {fmtDate(e.startDate)}{"\n"}{fmtDate(e.endDate)}
@@ -927,6 +949,7 @@ function ExecutivePdf({ data, lang }: { data: CVData; lang: CvLang }) {
                     <Text style={executiveS.eduBold}>{e.institution}</Text>
                     {e.degree ? ` — ${e.degree}` : ""}
                     {e.field ? `, ${e.field}` : ""}
+                    {e.gpa ? ` · Medie: ${e.gpa}` : ""}
                   </Text>
                   <Text style={executiveS.eduDate}>
                     {fmtDate(e.startDate)} – {e.endDate ? fmtDate(e.endDate) : L.present}

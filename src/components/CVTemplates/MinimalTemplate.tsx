@@ -29,6 +29,7 @@ export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data, lang = "
           {personal.phone && <span>{personal.phone}</span>}
           {personal.location && <span>{personal.location}</span>}
           {personal.website && <span>{personal.website}</span>}
+          {personal.linkedin && <span>{personal.linkedin}</span>}
         </div>
       </header>
 
@@ -88,7 +89,10 @@ export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({ data, lang = "
                   <h3 className="font-semibold text-neutral-900">
                     {edu.degree}{edu.field ? `, ${edu.field}` : ""}
                   </h3>
-                  <div className="text-neutral-500 font-medium">{edu.institution}</div>
+                  <div className="text-neutral-500 font-medium">
+                    {edu.institution}
+                    {edu.gpa && <span className="font-normal text-neutral-400"> · Medie: {edu.gpa}</span>}
+                  </div>
                 </div>
               </div>
             ))}

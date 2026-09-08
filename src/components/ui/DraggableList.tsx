@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useCallback } from "react";
 import {
   DndContext,
   closestCenter,
@@ -8,7 +8,6 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-  DragStartEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -73,10 +72,9 @@ export default function DraggableList<T>({
   renderItem,
   getId,
   theme,
-  scope = "list",
+  scope,
   sortable = true,
 }: Props<T>) {
-  const [activeId, setActiveId] = useState<string | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 6 },
@@ -84,7 +82,6 @@ export default function DraggableList<T>({
   );
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
-    setActiveId(null);
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -106,9 +103,9 @@ export default function DraggableList<T>({
 
   return (
     <DndContext
+      id={scope}
       sensors={sensors}
       collisionDetection={closestCenter}
-      onDragStart={(event: DragStartEvent) => setActiveId(event.active.id as string)}
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>

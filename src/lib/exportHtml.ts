@@ -19,11 +19,11 @@ export function exportToHtml(data: CVData, lang: CvLang = "ro") {
   const fullName = `${personal.firstName} ${personal.lastName}`.trim();
 
   const contacts = [
-    personal.email && `<span>✉ ${esc(personal.email)}</span>`,
-    personal.phone && `<span>☎ ${esc(personal.phone)}</span>`,
+    personal.email && `<span>✉ <a href="mailto:${esc(personal.email)}" style="color:inherit;text-decoration:none;">${esc(personal.email)}</a></span>`,
+    personal.phone && `<span>☎ <a href="tel:${esc(personal.phone)}" style="color:inherit;text-decoration:none;">${esc(personal.phone)}</a></span>`,
     personal.location && `<span>⌖ ${esc(personal.location)}</span>`,
-    personal.website && `<span>🌐 ${esc(personal.website)}</span>`,
-    personal.linkedin && `<span>in ${esc(personal.linkedin)}</span>`,
+    personal.website && `<span>🌐 <a href="${esc(personal.website.startsWith('http') ? personal.website : `https://${personal.website}`)}" target="_blank" rel="noreferrer" style="color:inherit;text-decoration:none;">${esc(personal.website)}</a></span>`,
+    personal.linkedin && `<span>in <a href="${esc(personal.linkedin.startsWith('http') ? personal.linkedin : `https://${personal.linkedin}`)}" target="_blank" rel="noreferrer" style="color:inherit;text-decoration:none;">${esc(personal.linkedin)}</a></span>`,
   ]
     .filter(Boolean)
     .join(" &nbsp;|&nbsp; ");
@@ -54,7 +54,7 @@ export function exportToHtml(data: CVData, lang: CvLang = "ro") {
       <div class="entry-header">
         <div>
           <strong>${esc(e.degree)}${e.field ? ` ${L.inWord} ${esc(e.field)}` : ""}</strong>
-          <span class="muted">${esc(e.institution)}</span>
+          <span class="muted">${esc(e.institution)}${e.gpa ? ` · Medie: ${esc(e.gpa)}` : ""}</span>
         </div>
         <span class="date">${formatDate(e.startDate)} – ${formatDate(e.endDate)}</span>
       </div>
@@ -133,9 +133,10 @@ export function exportToHtml(data: CVData, lang: CvLang = "ro") {
     <header>
       <div>
         <h1>${esc(fullName) || "Nume Prenume"}</h1>
+        ${personal.title ? `<div style="font-size: 13px; color: #94a3b8; font-weight: 500; margin-top: 4px;">${esc(personal.title)}</div>` : ""}
         <div class="contacts">${contacts}</div>
       </div>
-      ${personal.photo?.startsWith("data:image/") ? `<img class="photo" src="${personal.photo}" alt="" />` : ""}
+      ${personal.photo?.startsWith("data:image/") ? `<img class="photo" src="${personal.photo}" alt="${esc(fullName)}" />` : ""}
     </header>
     <main>
       ${personal.summary ? `<section><h2>${L.profile}</h2><p>${esc(personal.summary)}</p></section>` : ""}

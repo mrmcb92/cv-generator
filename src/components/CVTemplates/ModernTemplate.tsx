@@ -19,6 +19,7 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ data, lang = "ro
         <div>
           {personal.photo && (
             <div className="mb-6 flex justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={personal.photo}
                 alt={fullName}
@@ -54,6 +55,12 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ data, lang = "ro
               <div className="break-all">
                 <p className="text-[10px] text-slate-400 font-medium">Website</p>
                 <p className="text-slate-200">{personal.website}</p>
+              </div>
+            )}
+            {personal.linkedin && (
+              <div className="break-all">
+                <p className="text-[10px] text-slate-400 font-medium">LinkedIn</p>
+                <p className="text-slate-200">{personal.linkedin}</p>
               </div>
             )}
           </div>
@@ -184,7 +191,10 @@ export const ModernTemplate: React.FC<ModernTemplateProps> = ({ data, lang = "ro
                         {fmtDate(edu.startDate, lang)} – {fmtDate(edu.endDate, lang)}
                       </span>
                     </div>
-                    <p className="text-indigo-600 text-[11px] font-semibold">{edu.institution}</p>
+                    <p className="text-indigo-600 text-[11px] font-semibold">
+                      {edu.institution}
+                      {edu.gpa && <span className="font-normal text-gray-500"> · Medie: {edu.gpa}</span>}
+                    </p>
                   </div>
                 ))}
               </div>

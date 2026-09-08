@@ -31,9 +31,11 @@ export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data, lang =
               {personal.phone && <span>• {personal.phone}</span>}
               {personal.location && <span>• {personal.location}</span>}
               {personal.website && <span>• {personal.website}</span>}
+              {personal.linkedin && <span>• {personal.linkedin}</span>}
             </div>
           </div>
           {personal.photo && (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={personal.photo}
               alt={fullName}
@@ -103,7 +105,10 @@ export const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data, lang =
                       {fmtDate(edu.startDate, lang)} – {fmtDate(edu.endDate, lang)}
                     </span>
                   </div>
-                  <div className="text-teal-700 font-semibold text-[11px]">{edu.institution}</div>
+                  <div className="text-teal-700 font-semibold text-[11px]">
+                    {edu.institution}
+                    {edu.gpa && <span className="font-normal text-teal-600"> · Medie: {edu.gpa}</span>}
+                  </div>
                 </div>
               ))}
             </div>

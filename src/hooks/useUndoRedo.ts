@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 
 const MAX_HISTORY = 50;
 
@@ -7,14 +7,8 @@ export function useUndoRedo<T>(initial: T) {
   const [past, setPast] = useState<T[]>([]);
   const [present, setPresent] = useState<T>(initial);
   const [future, setFuture] = useState<T[]>([]);
-  const skipNext = useRef(false);
 
   const pushState = useCallback((next: T) => {
-    if (skipNext.current) {
-      skipNext.current = false;
-      setPresent(next);
-      return;
-    }
     setPast((prev) => [...prev.slice(-MAX_HISTORY + 1), present]);
     setPresent(next);
     setFuture([]);
@@ -24,7 +18,6 @@ export function useUndoRedo<T>(initial: T) {
     if (past.length === 0) return;
     const previous = past[past.length - 1];
     setPast((prev) => prev.slice(0, -1));
-    // setFuture must be called with a callback to capture present value
     setFuture((prev) => [present, ...prev]);
     setPresent(previous);
   }, [past, present]);
@@ -41,7 +34,6 @@ export function useUndoRedo<T>(initial: T) {
   const canRedo = future.length > 0;
 
   const replaceState = useCallback((state: T) => {
-    skipNext.current = true;
     setPresent(state);
     setPast([]);
     setFuture([]);

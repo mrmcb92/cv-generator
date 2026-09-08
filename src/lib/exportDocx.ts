@@ -59,9 +59,20 @@ export async function exportToDocx(data: CVData, lang: CvLang = "ro") {
     new Paragraph({
       children: [new TextRun({ text: fullName || "Nume Prenume", bold: true, size: 36 })],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 100 },
+      spacing: { after: personal.title ? 40 : 100 },
     })
   );
+
+  // Professional Title
+  if (personal.title) {
+    children.push(
+      new Paragraph({
+        children: [new TextRun({ text: personal.title, size: 22, color: "4B5563" })],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 100 },
+      })
+    );
+  }
 
   // Contact info
   const contacts = [
@@ -136,6 +147,7 @@ export async function exportToDocx(data: CVData, lang: CvLang = "ro") {
           children: [
             new TextRun({ text: `${edu.degree}${edu.field ? ` ${L.inWord} ${edu.field}` : ""}`, bold: true }),
             new TextRun({ text: `  |  ${edu.institution}`, color: "6B7280" }),
+            ...(edu.gpa ? [new TextRun({ text: `  |  Medie: ${edu.gpa}`, color: "6B7280" })] : []),
             new TextRun({
               text: `  ${formatDate(edu.startDate)} – ${formatDate(edu.endDate)}`,
               color: "9CA3AF",
@@ -147,34 +159,31 @@ export async function exportToDocx(data: CVData, lang: CvLang = "ro") {
     }
   }
 
-  // Skills & Languages in two columns via table
-  if (skills.length > 0 || languages.length > 0) {
-    const skillRows = skills.map(
-      (s) =>
-        new Paragraph({
-          children: [
-            new TextRun({ text: s.name }),
-            new TextRun({ text: `  – ${s.level}`, color: "9CA3AF" }),
-          ],
-          spacing: { after: 40 },
-        })
-    );
+  // Skills & Languages
+  const skillRows = skills.map(
+    (s) =>
+      new Paragraph({
+        children: [
+          new TextRun({ text: s.name, bold: true }),
+          new TextRun({ text: `  – ${s.level}`, color: "6B7280" }),
+        ],
+        spacing: { after: 40 },
+      })
+  );
 
-    const langRows = languages.map(
-      (l) =>
-        new Paragraph({
-          children: [
-            new TextRun({ text: l.name }),
-            new TextRun({ text: `  – ${l.level}`, color: "9CA3AF" }),
-          ],
-          spacing: { after: 40 },
-        })
-    );
+  const langRows = languages.map(
+    (l) =>
+      new Paragraph({
+        children: [
+          new TextRun({ text: l.name, bold: true }),
+          new TextRun({ text: `  – ${l.level}`, color: "6B7280" }),
+        ],
+        spacing: { after: 40 },
+      })
+  );
 
-    const tableRows = [];
-
-    // Header row
-    tableRows.push(
+  if (skills.length > 0 && languages.length > 0) {
+    const tableRows = [
       new TableRow({
         children: [
           new TableCell({
@@ -189,7 +198,7 @@ export async function exportToDocx(data: CVData, lang: CvLang = "ro") {
           }),
         ],
       })
-    );
+    ];
 
     const maxLen = Math.max(skillRows.length, langRows.length);
     for (let i = 0; i < maxLen; i++) {
@@ -215,6 +224,12 @@ export async function exportToDocx(data: CVData, lang: CvLang = "ro") {
         width: { size: 100, type: WidthType.PERCENTAGE },
       })
     );
+  } else if (skills.length > 0) {
+    children.push(sectionHeading(L.skills));
+    children.push(...skillRows);
+  } else if (languages.length > 0) {
+    children.push(sectionHeading(L.languages));
+    children.push(...langRows);
   }
 
   // Custom sections
