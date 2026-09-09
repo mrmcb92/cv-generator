@@ -2,69 +2,104 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { CVData, defaultCV } from "@/types/cv";
+import { CVData, defaultCV, CvDensity } from "@/types/cv";
 import { validateCV } from "@/lib/validateCv";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
-import PersonalSection  from "@/components/CVForm/PersonalSection";
+import PersonalSection from "@/components/CVForm/PersonalSection";
 import ExperienceSection from "@/components/CVForm/ExperienceSection";
+import ProjectsSection from "@/components/CVForm/ProjectsSection";
 import EducationSection from "@/components/CVForm/EducationSection";
-import SkillsSection    from "@/components/CVForm/SkillsSection";
+import SkillsSection from "@/components/CVForm/SkillsSection";
+import CertificationsSection from "@/components/CVForm/CertificationsSection";
 import CustomSectionsForm from "@/components/CVForm/CustomSectionsForm";
-import CVPreview        from "@/components/CVPreview";
-import ThemePicker      from "@/components/ThemePicker";
-import TemplatePicker   from "@/components/TemplatePicker";
-import ToastStack       from "@/components/ToastStack";
-import { useToast }     from "@/hooks/useToast";
+import CVPreview from "@/components/CVPreview";
+import ThemePicker from "@/components/ThemePicker";
+import TemplatePicker from "@/components/TemplatePicker";
+import ToastStack from "@/components/ToastStack";
+import ATSScoreDrawer from "@/components/ATSScoreDrawer";
+import CoverLetterModal from "@/components/CoverLetterModal";
+import DemoPresetsModal from "@/components/DemoPresetsModal";
+import ImportExportModal from "@/components/ImportExportModal";
+import SectionOrderModal from "@/components/SectionOrderModal";
+import PWAInstallButton from "@/components/PWAInstallButton";
+import { evaluateATS } from "@/lib/atsScore";
+import { useToast } from "@/hooks/useToast";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { cvTemplates, TemplateId } from "@/types/template";
 import { CvLang } from "@/lib/cvLabels";
 import { ThemeId } from "@/types/theme";
 import {
-  FilePdf, FileDoc, FileHtml, FileArrowDown, UploadSimple,
-  User, Briefcase, GraduationCap, Star, Stack,
-  ArrowUpRight, Circle, Plus, PencilSimple, Trash, List, X,
-  CaretLeft, CaretRight,
+  FilePdf,
+  FileDoc,
+  FileHtml,
+  User,
+  Briefcase,
+  GraduationCap,
+  Star,
+  Stack,
+  ArrowUpRight,
+  Circle,
+  Plus,
+  PencilSimple,
+  Trash,
+  List,
+  X,
+  CaretLeft,
+  CaretRight,
+  Code,
+  SealCheck,
+  EnvelopeOpen,
+  Sparkle,
+  ArrowsVertical,
+  Target,
+  FileCode,
 } from "@phosphor-icons/react";
 
 const EXPORTS = [
-  { type: "pdf",  label: "PDF",  Icon: FilePdf,  color: "bg-rose-500/90 hover:bg-rose-500" },
-  { type: "docx", label: "Word", Icon: FileDoc,  color: "bg-sky-500/90 hover:bg-sky-500" },
+  { type: "pdf", label: "PDF", Icon: FilePdf, color: "bg-rose-500/90 hover:bg-rose-500" },
+  { type: "docx", label: "Word", Icon: FileDoc, color: "bg-sky-500/90 hover:bg-sky-500" },
   { type: "html", label: "HTML", Icon: FileHtml, color: "bg-emerald-500/90 hover:bg-emerald-500" },
 ] as const;
 
-type Tab = "personal" | "experience" | "education" | "skills" | "other";
+type Tab =
+  | "personal"
+  | "experience"
+  | "projects"
+  | "education"
+  | "skills"
+  | "certifications"
+  | "other";
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
-  { id: "personal",   label: "Personal",   icon: User },
+  { id: "personal", label: "Personal", icon: User },
   { id: "experience", label: "Experiență", icon: Briefcase },
-  { id: "education",  label: "Educație",   icon: GraduationCap },
-  { id: "skills",     label: "Competențe", icon: Star },
-  { id: "other",      label: "Altele",     icon: Stack },
+  { id: "projects", label: "Proiecte", icon: Code },
+  { id: "education", label: "Educație", icon: GraduationCap },
+  { id: "skills", label: "Competențe", icon: Star },
+  { id: "certifications", label: "Certificări", icon: SealCheck },
+  { id: "other", label: "Altele", icon: Stack },
 ];
 
-// Per-theme right-panel background — makes Light vs Warm visually distinct
 const RIGHT_PANEL_BG: Record<ThemeId, string> = {
-  clean:  "radial-gradient(ellipse at 70% 10%, rgba(56,189,248,0.09) 0%, transparent 55%), #e2e8f0",
-  dark:   "radial-gradient(ellipse at 30% 20%, rgba(34,211,238,0.05) 0%, transparent 60%), #09090b",
+  clean: "radial-gradient(ellipse at 70% 10%, rgba(56,189,248,0.09) 0%, transparent 55%), #e2e8f0",
+  dark: "radial-gradient(ellipse at 30% 20%, rgba(34,211,238,0.05) 0%, transparent 60%), #09090b",
   violet: "radial-gradient(ellipse at 70% 15%, rgba(139,92,246,0.12) 0%, transparent 55%), #ede9f8",
-  warm:   "radial-gradient(ellipse at 70% 10%, rgba(251,146,60,0.12) 0%, transparent 55%), #faf5eb",
+  warm: "radial-gradient(ellipse at 70% 10%, rgba(251,146,60,0.12) 0%, transparent 55%), #faf5eb",
 };
 
-// Per-theme left-panel background
 const LEFT_PANEL_BG: Record<ThemeId, string> = {
-  clean:  "rgba(255,255,255,0.96)",
-  dark:   "rgba(24,24,27,0.97)",
+  clean: "rgba(255,255,255,0.96)",
+  dark: "rgba(24,24,27,0.97)",
   violet: "rgba(250,248,255,0.97)",
-  warm:   "rgba(254,252,247,0.97)",
+  warm: "rgba(254,252,247,0.97)",
 };
 
-// Per-theme tab bar background
 const TAB_BAR_BG: Record<ThemeId, string> = {
-  clean:  "rgba(241,245,249,0.95)",
-  dark:   "rgba(9,9,11,0.7)",
+  clean: "rgba(241,245,249,0.95)",
+  dark: "rgba(9,9,11,0.7)",
   violet: "rgba(245,243,255,0.95)",
-  warm:   "rgba(245,240,230,0.95)",
+  warm: "rgba(245,240,230,0.95)",
 };
 
 const LS_KEY = "cv-generator-data";
@@ -76,15 +111,24 @@ function loadFromStorage(): CVData | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed?.version === "1" ? validateCV(parsed.data) : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
-// ── Multiple CV profiles, stored together under one key ──
 const PROFILES_KEY = "cv-generator-profiles";
-const LS_LANG_KEY  = "cv-generator-lang";
+const LS_LANG_KEY = "cv-generator-lang";
 
-interface StoredProfile { id: string; name: string; data: CVData }
-interface ProfilesStore { version: "2"; activeId: string; profiles: StoredProfile[] }
+interface StoredProfile {
+  id: string;
+  name: string;
+  data: CVData;
+}
+interface ProfilesStore {
+  version: "2";
+  activeId: string;
+  profiles: StoredProfile[];
+}
 
 function loadProfilesStore(): ProfilesStore | null {
   try {
@@ -93,7 +137,9 @@ function loadProfilesStore(): ProfilesStore | null {
     const p = JSON.parse(raw);
     if (p?.version !== "2" || !Array.isArray(p.profiles) || p.profiles.length === 0) return null;
     return p as ProfilesStore;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 function saveProfilesStore(store: ProfilesStore) {
@@ -105,16 +151,28 @@ function App() {
   const { state: cv, setState: setCv, undo, redo, canUndo, canRedo, replaceState } = useUndoRedo<CVData>(defaultCV);
   const [activeTab, setActiveTab] = useState<Tab>("personal");
   const [templateId, setTemplateId] = useState<TemplateId>("classic");
-  const [cvLang, setCvLang]       = useState<CvLang>("ro");
+  const [cvLang, setCvLang] = useState<CvLang>("ro");
   const [exporting, setExporting] = useState<string | null>(null);
-  const { toasts, showToast }     = useToast();
+  const { toasts, showToast } = useToast();
+
+  // Modals state
+  const [isAtsOpen, setIsAtsOpen] = useState(false);
+  const [isCoverLetterOpen, setIsCoverLetterOpen] = useState(false);
+  const [isPresetsOpen, setIsPresetsOpen] = useState(false);
+  const [isImportExportOpen, setIsImportExportOpen] = useState(false);
+  const [isSectionOrderOpen, setIsSectionOrderOpen] = useState(false);
+
+  // ATS score evaluation
+  const atsReport = evaluateATS(cv);
 
   useKeyboardShortcuts({
     "Ctrl+1": () => setActiveTab("personal"),
     "Ctrl+2": () => setActiveTab("experience"),
-    "Ctrl+3": () => setActiveTab("education"),
-    "Ctrl+4": () => setActiveTab("skills"),
-    "Ctrl+5": () => setActiveTab("other"),
+    "Ctrl+3": () => setActiveTab("projects"),
+    "Ctrl+4": () => setActiveTab("education"),
+    "Ctrl+5": () => setActiveTab("skills"),
+    "Ctrl+6": () => setActiveTab("certifications"),
+    "Ctrl+7": () => setActiveTab("other"),
     "Ctrl+S": () => handleSaveJson(),
     "Ctrl+Z": () => undo(),
     "Ctrl+Shift+Z": () => redo(),
@@ -126,17 +184,19 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
 
-  // Load from localStorage after mount (avoids SSR hydration mismatch)
   useEffect(() => {
     let store = loadProfilesStore();
     if (!store) {
       const legacy = loadFromStorage();
       const id = crypto.randomUUID();
-      store = { version: "2", activeId: id, profiles: [{ id, name: "CV principal", data: legacy ?? defaultCV }] };
+      store = {
+        version: "2",
+        activeId: id,
+        profiles: [{ id, name: "CV principal", data: legacy ?? defaultCV }],
+      };
       saveProfilesStore(store);
     }
     const active = store.profiles.find((p) => p.id === store.activeId) ?? store.profiles[0];
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProfiles(store.profiles.map(({ id, name }) => ({ id, name })));
     setActiveProfileId(active.id);
     const valid = validateCV(active.data);
@@ -167,13 +227,12 @@ function App() {
       saveProfilesStore({
         ...store,
         activeId: activeProfileId,
-        profiles: store.profiles.map((p) => p.id === activeProfileId ? { ...p, data: cv } : p),
+        profiles: store.profiles.map((p) => (p.id === activeProfileId ? { ...p, data: cv } : p)),
       });
     }, 400);
     return () => clearTimeout(t);
   }, [cv, activeProfileId]);
 
-  // ── Profile actions ──
   const switchProfile = (id: string) => {
     if (id === activeProfileId) return;
     const store = loadProfilesStore();
@@ -181,7 +240,7 @@ function App() {
     const updated: ProfilesStore = {
       ...store,
       activeId: id,
-      profiles: store.profiles.map((p) => p.id === activeProfileId ? { ...p, data: cv } : p),
+      profiles: store.profiles.map((p) => (p.id === activeProfileId ? { ...p, data: cv } : p)),
     };
     const target = updated.profiles.find((p) => p.id === id);
     if (!target) return;
@@ -200,7 +259,7 @@ function App() {
       ...store,
       activeId: id,
       profiles: [
-        ...store.profiles.map((p) => p.id === activeProfileId ? { ...p, data: cv } : p),
+        ...store.profiles.map((p) => (p.id === activeProfileId ? { ...p, data: cv } : p)),
         { id, name, data: defaultCV },
       ],
     };
@@ -219,7 +278,7 @@ function App() {
     if (!store) return;
     const updated = {
       ...store,
-      profiles: store.profiles.map((p) => p.id === activeProfileId ? { ...p, name } : p),
+      profiles: store.profiles.map((p) => (p.id === activeProfileId ? { ...p, name } : p)),
     };
     saveProfilesStore(updated);
     setProfiles(updated.profiles.map(({ id, name: n }) => ({ id, name: n })));
@@ -259,7 +318,9 @@ function App() {
           const obj = JSON.parse(text);
           data = validateCV(obj?.version === "1" ? obj.data : obj);
         }
-      } catch { data = null; }
+      } catch {
+        data = null;
+      }
       if (data) {
         replaceState(data);
         showToast("CV importat cu succes");
@@ -285,7 +346,23 @@ function App() {
     showToast("CV salvat — păstrează fișierul pentru re-import");
   };
 
-  // Warn if key sections are empty before export
+  const handleAddSkills = (newSkillNames: string[]) => {
+    const existing = new Set(cv.skills.map((s) => s.name.toLowerCase()));
+    const toAdd = newSkillNames
+      .filter((s) => !existing.has(s.toLowerCase()))
+      .map((name) => ({
+        id: crypto.randomUUID(),
+        name,
+        level: "Mediu" as const,
+      }));
+    if (toAdd.length > 0) {
+      setCv({ ...cv, skills: [...cv.skills, ...toAdd] });
+      showToast(`${toAdd.length} competențe adăugate din anunț`);
+    } else {
+      showToast("Toate competențele se află deja în CV");
+    }
+  };
+
   const checkBeforeExport = (): boolean => {
     const fullName = `${cv.personal.firstName} ${cv.personal.lastName}`.trim();
     const hasName = fullName.length > 0;
@@ -298,9 +375,7 @@ function App() {
       return false;
     }
     if (!hasExperience && !hasEducation && !hasSkills) {
-      // CV-ul e aproape gol — nu blocăm, dar avertizăm
       showToast("CV-ul e aproape gol — doar numele e completat", "error");
-      // return false; // nu blocăm
     }
     return true;
   };
@@ -322,15 +397,16 @@ function App() {
     } catch (err) {
       console.error("Export failed:", err);
       showToast(`Exportul ${type.toUpperCase()} a eșuat — încearcă din nou`, "error");
-    } finally { setExporting(null); }
+    } finally {
+      setExporting(null);
+    }
   };
 
   const isDark = theme.id === "dark";
 
   return (
     <div className={`h-screen flex flex-col overflow-hidden ${theme.pageBg}`}>
-
-      {/* Import hidden input (shared by desktop + mobile import buttons) */}
+      {/* Hidden input for legacy native import */}
       <input
         ref={importRef}
         type="file"
@@ -339,24 +415,97 @@ function App() {
         onChange={handleImport}
       />
 
-      {/* ── Navbar ── */}
+      {/* ── Top Navbar ── */}
       <header
-        className={`relative z-40 flex-shrink-0 ${theme.navBg} flex items-center px-4 sm:px-5 gap-4`}
+        className={`relative z-40 flex-shrink-0 ${theme.navBg} flex items-center px-4 sm:px-5 gap-3`}
         style={{
           boxShadow: "0 1px 0 rgba(255,255,255,0.05)",
           paddingTop: "env(safe-area-inset-top, 0px)",
           height: "calc(52px + env(safe-area-inset-top, 0px))",
         }}
       >
-        <div className="flex items-center gap-2 mr-auto lg:mr-1">
+        {/* Brand */}
+        <div className="flex items-center gap-2 mr-auto lg:mr-2">
           <div className={`w-5 h-5 rounded-md flex items-center justify-center ${isDark ? "bg-cyan-400/20" : "bg-white/15"}`}>
             <Circle size={8} weight="fill" className={isDark ? "text-cyan-400" : "text-white/80"} />
           </div>
-          <span className={`text-[13px] font-semibold tracking-tight ${theme.navText}`}>Generator CV</span>
+          <span className={`text-[13px] font-semibold tracking-tight ${theme.navText}`}>
+            Generator CV <span className="text-[10px] font-normal opacity-70">Pro</span>
+          </span>
         </div>
 
-        {/* ── Desktop inline controls (lg and up) ── */}
-        <div className="hidden lg:flex items-center gap-4 flex-1">
+        {/* ── Desktop action pills ── */}
+        <div className="hidden lg:flex items-center gap-2.5 flex-1">
+          {/* Real-time ATS Score Badge */}
+          <button
+            type="button"
+            onClick={() => setIsAtsOpen(true)}
+            className={`group inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition border ${atsReport.color}`}
+            title="Deschide raportul de compatibilitate ATS și scannerul de job"
+          >
+            <Sparkle size={12} weight="fill" className="text-amber-500 group-hover:rotate-12 transition-transform" />
+            <span>{atsReport.score}/100 ATS</span>
+            <span className="text-[10px] font-normal opacity-80 hidden xl:inline">({atsReport.grade})</span>
+          </button>
+
+          {/* Cover Letter Modal Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsCoverLetterOpen(true)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition ${
+              isDark ? "bg-white/8 hover:bg-white/14 text-white/80" : "bg-black/8 hover:bg-black/14 text-zinc-700"
+            }`}
+            title="Generează Scrisoare de Intenție adaptată profilului"
+          >
+            <EnvelopeOpen size={13} weight="fill" className="text-sky-500" />
+            <span>Scrisoare Intenție</span>
+          </button>
+
+          {/* Presets Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsPresetsOpen(true)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition ${
+              isDark ? "bg-white/8 hover:bg-white/14 text-white/80" : "bg-black/8 hover:bg-black/14 text-zinc-700"
+            }`}
+            title="Încarcă un model de CV dintr-un domeniu (IT, Marketing, Student, Executiv)"
+          >
+            <Target size={13} weight="fill" className="text-emerald-500" />
+            <span>Exemple CV</span>
+          </button>
+
+          {/* Section Order & Density Modal Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsSectionOrderOpen(true)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition ${
+              isDark ? "bg-white/8 hover:bg-white/14 text-white/80" : "bg-black/8 hover:bg-black/14 text-zinc-700"
+            }`}
+            title="Reordonează secțiunile pe CV și setează densitatea (Fit 1 Pagină)"
+          >
+            <ArrowsVertical size={13} weight="bold" className="text-cyan-500" />
+            <span>Paginare & Ordine</span>
+          </button>
+
+          {/* Import/Export Modal Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsImportExportOpen(true)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium transition ${
+              isDark ? "bg-white/8 hover:bg-white/14 text-white/80" : "bg-black/8 hover:bg-black/14 text-zinc-700"
+            }`}
+            title="JSON Resume Standard, Parser inteligent AI și backup"
+          >
+            <FileCode size={13} weight="bold" className="text-indigo-400" />
+            <span>JSON Resume & AI</span>
+          </button>
+
+          <div className="flex-1" />
+
+          {/* PWA install button */}
+          <PWAInstallButton theme={theme} />
+
+          {/* Theme picker */}
           <ThemePicker />
 
           {/* Profile selector */}
@@ -365,132 +514,135 @@ function App() {
               value={activeProfileId}
               onChange={(e) => switchProfile(e.target.value)}
               aria-label="Profil CV activ"
-              className={`text-[11px] font-medium rounded-full px-2.5 py-1 outline-none cursor-pointer max-w-[140px] ${isDark ? "bg-white/8 text-white/80" : "bg-black/8 text-zinc-700"}`}
+              className={`text-[11px] font-medium rounded-full px-2.5 py-1 outline-none cursor-pointer max-w-[130px] ${
+                isDark ? "bg-white/8 text-white/80" : "bg-black/8 text-zinc-700"
+              }`}
             >
-              {profiles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              {profiles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
             </select>
-            <button onClick={newProfile} title="CV nou" aria-label="Creează profil CV nou"
-              className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/10" : "text-zinc-500 hover:text-zinc-900 hover:bg-black/8"}`}>
+            <button
+              onClick={newProfile}
+              title="CV nou"
+              aria-label="Creează profil CV nou"
+              className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                isDark ? "text-white/50 hover:text-white hover:bg-white/10" : "text-zinc-500 hover:text-zinc-900 hover:bg-black/8"
+              }`}
+            >
               <Plus size={11} weight="bold" />
             </button>
-            <button onClick={renameProfile} title="Redenumește" aria-label="Redenumește profilul activ"
-              className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDark ? "text-white/50 hover:text-white hover:bg-white/10" : "text-zinc-500 hover:text-zinc-900 hover:bg-black/8"}`}>
+            <button
+              onClick={renameProfile}
+              title="Redenumește"
+              aria-label="Redenumește profilul activ"
+              className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                isDark ? "text-white/50 hover:text-white hover:bg-white/10" : "text-zinc-500 hover:text-zinc-900 hover:bg-black/8"
+              }`}
+            >
               <PencilSimple size={11} weight="bold" />
             </button>
-            <button onClick={deleteProfile} title="Șterge profilul" aria-label="Șterge profilul activ"
-              className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDark ? "text-white/50 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-500 hover:text-red-500 hover:bg-red-50"}`}>
+            <button
+              onClick={deleteProfile}
+              title="Șterge profilul"
+              aria-label="Șterge profilul activ"
+              className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                isDark ? "text-white/50 hover:text-red-400 hover:bg-red-400/10" : "text-zinc-500 hover:text-red-500 hover:bg-red-50"
+              }`}
+            >
               <Trash size={11} weight="bold" />
             </button>
           </div>
 
           {/* CV language toggle */}
-          <div className={`flex items-center rounded-full p-0.5 flex-shrink-0 ${isDark ? "bg-white/8" : "bg-black/8"}`} title="Limba CV-ului (etichetele secțiunilor)">
+          <div
+            className={`flex items-center rounded-full p-0.5 flex-shrink-0 ${isDark ? "bg-white/8" : "bg-black/8"}`}
+            title="Limba CV-ului (etichetele secțiunilor)"
+          >
             {(["ro", "en"] as const).map((lng) => (
-              <button key={lng} onClick={() => changeLang(lng)}
+              <button
+                key={lng}
+                onClick={() => changeLang(lng)}
                 className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase transition-all ${
                   cvLang === lng
                     ? "bg-sky-500 text-white"
-                    : isDark ? "text-white/50 hover:text-white/80" : "text-zinc-500 hover:text-zinc-800"
-                }`}>
+                    : isDark
+                    ? "text-white/50 hover:text-white/80"
+                    : "text-zinc-500 hover:text-zinc-800"
+                }`}
+              >
                 {lng}
               </button>
             ))}
           </div>
 
-          <div className="flex-1" />
-
-          {/* Undo / Redo buttons */}
-          <button onClick={undo} disabled={!canUndo}
-            className={`w-7 h-7 rounded-full flex items-center justify-center disabled:opacity-30 transition-colors ${isDark ? "text-zinc-500 hover:text-white hover:bg-white/10" : "text-zinc-400 hover:text-zinc-900 hover:bg-black/8"}`}
-            title="Undo (Ctrl+Z)">
+          {/* Undo / Redo */}
+          <button
+            onClick={undo}
+            disabled={!canUndo}
+            className={`w-7 h-7 rounded-full flex items-center justify-center disabled:opacity-30 transition-colors ${
+              isDark ? "text-zinc-500 hover:text-white hover:bg-white/10" : "text-zinc-400 hover:text-zinc-900 hover:bg-black/8"
+            }`}
+            title="Undo (Ctrl+Z)"
+          >
             <CaretLeft size={12} weight="bold" />
           </button>
-          <button onClick={redo} disabled={!canRedo}
-            className={`w-7 h-7 rounded-full flex items-center justify-center disabled:opacity-30 transition-colors ${isDark ? "text-zinc-500 hover:text-white hover:bg-white/10" : "text-zinc-400 hover:text-zinc-900 hover:bg-black/8"}`}
-            title="Redo (Ctrl+Shift+Z)">
+          <button
+            onClick={redo}
+            disabled={!canRedo}
+            className={`w-7 h-7 rounded-full flex items-center justify-center disabled:opacity-30 transition-colors ${
+              isDark ? "text-zinc-500 hover:text-white hover:bg-white/10" : "text-zinc-400 hover:text-zinc-900 hover:bg-black/8"
+            }`}
+            title="Redo (Ctrl+Shift+Z)"
+          >
             <CaretRight size={12} weight="bold" />
           </button>
 
-          {/* Import + Save buttons */}
-          <button
-            onClick={() => importRef.current?.click()}
-            title="Importă CV (.cv.json sau .html)"
-            className={`group flex items-center gap-1.5 text-[11px] font-semibold pl-2.5 pr-1 py-1 rounded-full transition-all duration-300 active:scale-[0.97] ${isDark ? "bg-white/8 hover:bg-white/14 text-white/60 hover:text-white" : "bg-black/8 hover:bg-black/14 text-zinc-600 hover:text-zinc-900"}`}
-            style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)" }}
-          >
-            Importă
-            <span className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${isDark ? "bg-white/10 group-hover:bg-white/20" : "bg-black/8 group-hover:bg-black/15"}`}>
-              <UploadSimple size={10} weight="bold" />
-            </span>
-          </button>
-
-          <button
-            onClick={handleSaveJson}
-            title="Salvează CV ca fișier JSON (pentru re-import ulterior)"
-            className={`group flex items-center gap-1.5 text-[11px] font-semibold pl-2.5 pr-1 py-1 rounded-full transition-all duration-300 active:scale-[0.97] ${isDark ? "bg-white/8 hover:bg-white/14 text-white/60 hover:text-white" : "bg-black/8 hover:bg-black/14 text-zinc-600 hover:text-zinc-900"}`}
-            style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)" }}
-          >
-            Salvează
-            <span className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${isDark ? "bg-white/10 group-hover:bg-white/20" : "bg-black/8 group-hover:bg-black/15"}`}>
-              <FileArrowDown size={10} weight="bold" />
-            </span>
-          </button>
-
+          {/* Exports buttons */}
           {EXPORTS.map(({ type, label, Icon, color }) => (
             <button
               key={type}
               onClick={() => handleExport(type)}
               disabled={exporting !== null}
-              className={`group flex items-center gap-2 text-white text-[11px] font-semibold pl-3 pr-1 py-1 rounded-full disabled:opacity-40 transition-all duration-300 active:scale-[0.97] ${color}`}
-              style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)" }}
+              className={`group flex items-center gap-1.5 text-white text-[11px] font-semibold pl-3 pr-1 py-1 rounded-full disabled:opacity-40 transition-all active:scale-[0.97] ${color}`}
             >
               {exporting === type ? "..." : label}
               <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                {exporting === type
-                  ? <ArrowUpRight size={10} weight="bold" className="animate-spin" />
-                  : <Icon size={10} weight="bold" />}
+                {exporting === type ? (
+                  <ArrowUpRight size={10} weight="bold" className="animate-spin" />
+                ) : (
+                  <Icon size={10} weight="bold" />
+                )}
               </span>
             </button>
           ))}
-          {/* Export RO+EN shortcut — exportă PDF în ambele limbi cu delay între ele */}
-          <button
-            onClick={async () => {
-              setExporting("pdf");
-              try {
-                const { exportToPdf } = await import("@/lib/exportPdf");
-                const first = cvLang === "ro" ? "ro" : "en";
-                const second = first === "ro" ? "en" : "ro";
-                await exportToPdf(cv.personal.lastName, cv, templateId, first);
-                // Delay between downloads so the browser doesn't block the second
-                await new Promise((r) => setTimeout(r, 500));
-                await exportToPdf(cv.personal.lastName, cv, templateId, second);
-                showToast("PDF exportat în RO și EN");
-              } catch {
-                showToast("Exportul bilingv a eșuat", "error");
-              } finally { setExporting(null); }
-            }}
-            disabled={exporting !== null}
-            title="Exportă PDF în ambele limbi"
-            className="group flex items-center gap-2 text-white text-[11px] font-semibold pl-3 pr-1 py-1 rounded-full disabled:opacity-40 transition-all duration-300 active:scale-[0.97] bg-purple-500/90 hover:bg-purple-500"
-            style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)" }}
-          >
-            RO/EN
-          </button>
         </div>
 
-        {/* ── Mobile menu button (below lg) ── */}
-        <button
-          onClick={() => setMenuOpen((v) => !v)}
-          aria-label="Meniu"
-          aria-expanded={menuOpen}
-          className="lg:hidden flex items-center gap-1.5 text-[12px] font-semibold text-white/90 bg-white/12 hover:bg-white/20 rounded-full pl-2.5 pr-3.5 py-1.5 active:scale-95 transition"
-        >
-          {menuOpen ? <X size={15} weight="bold" /> : <List size={15} weight="bold" />}
-          Meniu
-        </button>
+        {/* ── Mobile ATS & Menu bar (below lg) ── */}
+        <div className="lg:hidden flex items-center gap-2">
+          <button
+            onClick={() => setIsAtsOpen(true)}
+            className={`px-2.5 py-1 rounded-full text-[11px] font-bold border flex items-center gap-1 ${atsReport.color}`}
+          >
+            <Sparkle size={12} weight="fill" className="text-amber-500" />
+            {atsReport.score} ATS
+          </button>
+
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Meniu"
+            aria-expanded={menuOpen}
+            className="flex items-center gap-1.5 text-[12px] font-semibold text-white/90 bg-white/12 hover:bg-white/20 rounded-full pl-2.5 pr-3 py-1.5 active:scale-95 transition"
+          >
+            {menuOpen ? <X size={15} weight="bold" /> : <List size={15} weight="bold" />}
+            Meniu
+          </button>
+        </div>
       </header>
 
-      {/* ── Mobile menu sheet (below lg) ── */}
+      {/* ── Mobile menu sheet ── */}
       {menuOpen && (
         <div className="lg:hidden">
           <div
@@ -499,74 +651,134 @@ function App() {
             onClick={() => setMenuOpen(false)}
           />
           <div
-            className={`fixed inset-x-0 z-40 overflow-y-auto px-4 py-4 space-y-5 border-t border-white/10 shadow-2xl ${theme.navBg}`}
+            className={`fixed inset-x-0 z-40 overflow-y-auto px-4 py-4 space-y-4 border-t border-white/10 shadow-2xl ${theme.navBg}`}
             style={{
               top: "calc(52px + env(safe-area-inset-top, 0px))",
               maxHeight: "calc(100dvh - 52px - env(safe-area-inset-top, 0px))",
             }}
           >
+            {/* Quick Actions Bar for mobile */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  setIsAtsOpen(true);
+                  setMenuOpen(false);
+                }}
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white/10 text-white text-[12px] font-semibold"
+              >
+                <Sparkle size={15} className="text-amber-400" />
+                Scor ATS ({atsReport.score}%)
+              </button>
+              <button
+                onClick={() => {
+                  setIsCoverLetterOpen(true);
+                  setMenuOpen(false);
+                }}
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white/10 text-white text-[12px] font-semibold"
+              >
+                <EnvelopeOpen size={15} className="text-sky-400" />
+                Scrisoare Intenție
+              </button>
+              <button
+                onClick={() => {
+                  setIsPresetsOpen(true);
+                  setMenuOpen(false);
+                }}
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white/10 text-white text-[12px] font-semibold"
+              >
+                <Target size={15} className="text-emerald-400" />
+                Exemple CV
+              </button>
+              <button
+                onClick={() => {
+                  setIsSectionOrderOpen(true);
+                  setMenuOpen(false);
+                }}
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white/10 text-white text-[12px] font-semibold"
+              >
+                <ArrowsVertical size={15} className="text-cyan-400" />
+                Ordine & Paginare
+              </button>
+              <button
+                onClick={() => {
+                  setIsImportExportOpen(true);
+                  setMenuOpen(false);
+                }}
+                className="col-span-2 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white/10 text-white text-[12px] font-semibold"
+              >
+                <FileCode size={15} className="text-indigo-400" />
+                JSON Resume & Parser AI
+              </button>
+            </div>
+
             {/* Export */}
             <section>
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">Exportă CV</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">
+                Exportă CV
+              </p>
               <div className="grid grid-cols-3 gap-2">
                 {EXPORTS.map(({ type, label, Icon, color }) => (
                   <button
                     key={type}
-                    onClick={() => { handleExport(type); setMenuOpen(false); }}
+                    onClick={() => {
+                      handleExport(type);
+                      setMenuOpen(false);
+                    }}
                     disabled={exporting !== null}
-                    className={`flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl text-white text-[12px] font-semibold disabled:opacity-40 active:scale-95 transition ${color}`}
+                    className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl text-white text-[12px] font-semibold disabled:opacity-40 active:scale-95 transition ${color}`}
                   >
-                    {exporting === type
-                      ? <ArrowUpRight size={20} weight="bold" className="animate-spin" />
-                      : <Icon size={20} weight="bold" />}
+                    {exporting === type ? (
+                      <ArrowUpRight size={18} weight="bold" className="animate-spin" />
+                    ) : (
+                      <Icon size={18} weight="bold" />
+                    )}
                     {label}
                   </button>
                 ))}
               </div>
             </section>
 
-            {/* File */}
-            <section>
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">Fișier</p>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => { importRef.current?.click(); setMenuOpen(false); }}
-                  className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12.5px] font-semibold text-white/85 bg-white/10 hover:bg-white/15 active:scale-95 transition"
-                >
-                  <UploadSimple size={15} weight="bold" /> Importă
-                </button>
-                <button
-                  onClick={() => { handleSaveJson(); setMenuOpen(false); }}
-                  className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12.5px] font-semibold text-white/85 bg-white/10 hover:bg-white/15 active:scale-95 transition"
-                >
-                  <FileArrowDown size={15} weight="bold" /> Salvează
-                </button>
-              </div>
-            </section>
-
             {/* Profile */}
             <section>
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">Profil CV</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">
+                Profil CV
+              </p>
               <div className="flex items-center gap-2">
                 <select
                   value={activeProfileId}
-                  onChange={(e) => { switchProfile(e.target.value); setMenuOpen(false); }}
+                  onChange={(e) => {
+                    switchProfile(e.target.value);
+                    setMenuOpen(false);
+                  }}
                   aria-label="Profil CV activ"
-                  className="flex-1 min-w-0 text-[13px] font-medium rounded-xl px-3 py-2.5 bg-white/10 text-white outline-none"
+                  className="flex-1 min-w-0 text-[13px] font-medium rounded-xl px-3 py-2 bg-white/10 text-white outline-none"
                 >
-                  {profiles.map((p) => <option key={p.id} value={p.id} className="text-zinc-900">{p.name}</option>)}
+                  {profiles.map((p) => (
+                    <option key={p.id} value={p.id} className="text-zinc-900">
+                      {p.name}
+                    </option>
+                  ))}
                 </select>
-                <button onClick={newProfile} aria-label="Creează profil CV nou"
-                  className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center text-white/80 bg-white/10 hover:bg-white/15 active:scale-95 transition">
-                  <Plus size={15} weight="bold" />
+                <button
+                  onClick={newProfile}
+                  aria-label="Creează profil CV nou"
+                  className="w-9 h-9 flex-shrink-0 rounded-xl flex items-center justify-center text-white/80 bg-white/10 hover:bg-white/15 active:scale-95 transition"
+                >
+                  <Plus size={14} weight="bold" />
                 </button>
-                <button onClick={renameProfile} aria-label="Redenumește profilul activ"
-                  className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center text-white/80 bg-white/10 hover:bg-white/15 active:scale-95 transition">
-                  <PencilSimple size={15} weight="bold" />
+                <button
+                  onClick={renameProfile}
+                  aria-label="Redenumește profilul activ"
+                  className="w-9 h-9 flex-shrink-0 rounded-xl flex items-center justify-center text-white/80 bg-white/10 hover:bg-white/15 active:scale-95 transition"
+                >
+                  <PencilSimple size={14} weight="bold" />
                 </button>
-                <button onClick={deleteProfile} aria-label="Șterge profilul activ"
-                  className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center text-white/80 bg-white/10 hover:bg-red-500/25 hover:text-red-300 active:scale-95 transition">
-                  <Trash size={15} weight="bold" />
+                <button
+                  onClick={deleteProfile}
+                  aria-label="Șterge profilul activ"
+                  className="w-9 h-9 flex-shrink-0 rounded-xl flex items-center justify-center text-white/80 bg-white/10 hover:bg-red-500/25 hover:text-red-300 active:scale-95 transition"
+                >
+                  <Trash size={14} weight="bold" />
                 </button>
               </div>
             </section>
@@ -574,17 +786,24 @@ function App() {
             {/* Appearance + language */}
             <section className="flex flex-wrap items-end gap-x-6 gap-y-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">Aspect aplicație</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">
+                  Aspect aplicație
+                </p>
                 <ThemePicker />
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">Limba CV-ului</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40 mb-2">
+                  Limba CV-ului
+                </p>
                 <div className="inline-flex items-center rounded-full p-0.5 bg-white/10">
                   {(["ro", "en"] as const).map((lng) => (
-                    <button key={lng} onClick={() => changeLang(lng)}
+                    <button
+                      key={lng}
+                      onClick={() => changeLang(lng)}
                       className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase transition-all ${
                         cvLang === lng ? "bg-sky-500 text-white" : "text-white/50 hover:text-white/80"
-                      }`}>
+                      }`}
+                    >
                       {lng}
                     </button>
                   ))}
@@ -595,12 +814,11 @@ function App() {
         </div>
       )}
 
-      {/* ── Main split ── */}
+      {/* ── Main Workspace ── */}
       <div className="flex flex-1 overflow-hidden min-h-0">
-
-        {/* Left panel */}
+        {/* Left Form Panel */}
         <div
-          className={`${mobileView === "preview" ? "hidden" : "flex"} w-full lg:flex lg:w-[46%] flex-col overflow-hidden`}
+          className={`${mobileView === "preview" ? "hidden" : "flex"} w-full lg:flex lg:w-[48%] xl:w-[45%] flex-col overflow-hidden`}
           style={{
             background: LEFT_PANEL_BG[theme.id],
             borderRight: isDark ? "1px solid rgba(255,255,255,0.05)" : "1px solid rgba(0,0,0,0.06)",
@@ -609,9 +827,9 @@ function App() {
               : "inset -1px 0 0 rgba(255,255,255,0.8), 4px 0 32px rgba(0,0,0,0.04)",
           }}
         >
-          {/* Tab bar */}
+          {/* Tabs Bar */}
           <div
-            className="flex flex-shrink-0 px-2 lg:px-3 pt-2 lg:pt-2.5 pb-2 lg:pb-0 gap-1 lg:gap-0.5"
+            className="flex flex-shrink-0 px-2 lg:px-3 pt-2 lg:pt-2.5 pb-2 lg:pb-0 gap-1 overflow-x-auto scrollbar-none"
             style={{
               background: TAB_BAR_BG[theme.id],
               borderBottom: isDark ? "1px solid rgba(255,255,255,0.04)" : "1px solid rgba(0,0,0,0.05)",
@@ -624,10 +842,9 @@ function App() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex-1 flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-1.5 py-2.5 lg:py-2 text-[10px] lg:text-[11px] font-medium transition-colors rounded-xl lg:rounded-t-lg ${
+                  className={`relative flex-1 min-w-[70px] flex flex-col lg:flex-row items-center justify-center gap-1 lg:gap-1.5 py-2 text-[10px] lg:text-[11px] font-medium transition-colors rounded-xl lg:rounded-t-lg ${
                     active ? theme.tabActiveText : theme.tabInactiveText
                   }`}
-                  style={{ transitionTimingFunction: "cubic-bezier(0.32,0.72,0,1)", transitionDuration: "200ms" }}
                 >
                   {active && (
                     <motion.span
@@ -642,7 +859,7 @@ function App() {
                       transition={{ type: "spring", stiffness: 500, damping: 40 }}
                     />
                   )}
-                  <Icon weight={active ? "bold" : "regular"} className="relative z-10 lg:hidden" size={19} />
+                  <Icon weight={active ? "bold" : "regular"} className="relative z-10 lg:hidden" size={17} />
                   <Icon weight={active ? "bold" : "regular"} className="relative z-10 hidden lg:block" size={12} />
                   <span className="relative z-10 leading-none whitespace-nowrap">{tab.label}</span>
                 </button>
@@ -650,34 +867,84 @@ function App() {
             })}
           </div>
 
-          {/* Form content */}
+          {/* Form Content Area */}
           <div className="flex-1 overflow-y-auto">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+                initial={{ opacity: 0, y: 10, filter: "blur(3px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -8, filter: "blur(2px)" }}
-                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] as [number,number,number,number] }}
-                className="p-5"
+                exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
+                transition={{ duration: 0.18 }}
+                className="p-4 sm:p-5"
               >
-                {activeTab === "personal"   && <PersonalSection   data={cv.personal}   onChange={(personal)   => setCv({ ...cv, personal })}   theme={theme} />}
-                {activeTab === "experience" && <ExperienceSection data={cv.experience} onChange={(experience) => setCv({ ...cv, experience })} theme={theme} />}
-                {activeTab === "education"  && <EducationSection  data={cv.education}  onChange={(education)  => setCv({ ...cv, education })}  theme={theme} />}
-                {activeTab === "skills"     && <SkillsSection skills={cv.skills} languages={cv.languages} drivingLicenses={cv.drivingLicenses} onSkillsChange={(skills) => setCv({ ...cv, skills })} onLanguagesChange={(languages) => setCv({ ...cv, languages })} onDrivingChange={(drivingLicenses) => setCv({ ...cv, drivingLicenses })} theme={theme} />}
-                {activeTab === "other"      && <CustomSectionsForm data={cv.customSections} onChange={(customSections) => setCv({ ...cv, customSections })} theme={theme} />}
+                {activeTab === "personal" && (
+                  <PersonalSection
+                    data={cv.personal}
+                    onChange={(personal) => setCv({ ...cv, personal })}
+                    theme={theme}
+                  />
+                )}
+                {activeTab === "experience" && (
+                  <ExperienceSection
+                    data={cv.experience}
+                    onChange={(experience) => setCv({ ...cv, experience })}
+                    theme={theme}
+                  />
+                )}
+                {activeTab === "projects" && (
+                  <ProjectsSection
+                    projects={cv.projects || []}
+                    onChange={(projects) => setCv({ ...cv, projects })}
+                    theme={theme}
+                    lang={cvLang}
+                  />
+                )}
+                {activeTab === "education" && (
+                  <EducationSection
+                    data={cv.education}
+                    onChange={(education) => setCv({ ...cv, education })}
+                    theme={theme}
+                  />
+                )}
+                {activeTab === "skills" && (
+                  <SkillsSection
+                    skills={cv.skills}
+                    languages={cv.languages}
+                    drivingLicenses={cv.drivingLicenses}
+                    onSkillsChange={(skills) => setCv({ ...cv, skills })}
+                    onLanguagesChange={(languages) => setCv({ ...cv, languages })}
+                    onDrivingChange={(drivingLicenses) => setCv({ ...cv, drivingLicenses })}
+                    theme={theme}
+                  />
+                )}
+                {activeTab === "certifications" && (
+                  <CertificationsSection
+                    certifications={cv.certifications || []}
+                    onChange={(certifications) => setCv({ ...cv, certifications })}
+                    theme={theme}
+                    lang={cvLang}
+                  />
+                )}
+                {activeTab === "other" && (
+                  <CustomSectionsForm
+                    data={cv.customSections}
+                    onChange={(customSections) => setCv({ ...cv, customSections })}
+                    theme={theme}
+                  />
+                )}
               </motion.div>
             </AnimatePresence>
           </div>
         </div>
 
-        {/* Right panel */}
+        {/* Right Preview Panel */}
         <div
           className={`${mobileView === "edit" ? "hidden" : "flex"} lg:flex flex-1 flex-col overflow-hidden`}
           style={{ background: RIGHT_PANEL_BG[theme.id] }}
         >
           <TemplatePicker selected={templateId} onChange={changeTemplate} isDark={isDark} />
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex justify-center">
             <AnimatePresence mode="popLayout">
               <motion.div
                 key={templateId}
@@ -685,6 +952,7 @@ function App() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
+                className="w-full flex justify-center"
               >
                 <CVPreview data={cv} templateId={templateId} lang={cvLang} />
               </motion.div>
@@ -693,26 +961,91 @@ function App() {
         </div>
       </div>
 
-      {/* Mobile editor/preview toggle — safe area bottom inset on iOS */}
+      {/* Mobile Bottom Navigation Bar (Editor vs Previzualizare) */}
       <div
         className={`lg:hidden flex-shrink-0 flex border-t pb-[env(safe-area-inset-bottom,0px)] ${
           isDark ? "bg-zinc-900 border-white/10" : "bg-white border-black/10"
         }`}
       >
-        {([
-          { id: "edit" as const,    label: "Editor" },
-          { id: "preview" as const, label: "Previzualizare" },
-        ]).map((v) => (
-          <button key={v.id} onClick={() => setMobileView(v.id)}
-            className={`flex-1 min-h-[44px] py-3 text-[12px] font-semibold transition-colors ${
+        {(
+          [
+            { id: "edit" as const, label: "Editor Formular" },
+            { id: "preview" as const, label: "Previzualizare CV" },
+          ] as const
+        ).map((v) => (
+          <button
+            key={v.id}
+            onClick={() => setMobileView(v.id)}
+            className={`flex-1 min-h-[44px] py-3 text-[12.5px] font-semibold transition-colors ${
               mobileView === v.id
-                ? isDark ? "text-cyan-400" : "text-sky-600"
-                : isDark ? "text-zinc-500" : "text-zinc-400"
-            }`}>
+                ? isDark
+                  ? "text-cyan-400 bg-white/5"
+                  : "text-sky-600 bg-sky-50/50"
+                : isDark
+                ? "text-zinc-500"
+                : "text-zinc-400"
+            }`}
+          >
             {v.label}
           </button>
         ))}
       </div>
+
+      {/* Modals & Drawers */}
+      <ATSScoreDrawer
+        cv={cv}
+        theme={theme}
+        isOpen={isAtsOpen}
+        onClose={() => setIsAtsOpen(false)}
+        onNavigateTab={(tab) => {
+          setActiveTab(tab);
+          setMobileView("edit");
+        }}
+        onAddSkills={handleAddSkills}
+      />
+
+      <CoverLetterModal
+        cv={cv}
+        theme={theme}
+        isOpen={isCoverLetterOpen}
+        onClose={() => setIsCoverLetterOpen(false)}
+      />
+
+      <DemoPresetsModal
+        theme={theme}
+        isOpen={isPresetsOpen}
+        onClose={() => setIsPresetsOpen(false)}
+        onSelectPreset={(newCv) => {
+          replaceState(newCv);
+          showToast("Model de carieră încărcat cu succes!");
+        }}
+      />
+
+      <ImportExportModal
+        cv={cv}
+        theme={theme}
+        isOpen={isImportExportOpen}
+        onClose={() => setIsImportExportOpen(false)}
+        onImportCV={(importedCv) => {
+          replaceState(importedCv);
+          showToast("CV importat cu succes!");
+        }}
+      />
+
+      <SectionOrderModal
+        cv={cv}
+        theme={theme}
+        isOpen={isSectionOrderOpen}
+        onClose={() => setIsSectionOrderOpen(false)}
+        onUpdateOrder={(newOrder) => {
+          setCv({ ...cv, sectionOrder: newOrder });
+          showToast("Ordinea secțiunilor a fost salvată");
+        }}
+        onUpdateDensity={(density: CvDensity) => {
+          setCv({ ...cv, density });
+          showToast(`Densitate setată: ${density}`);
+        }}
+      />
 
       <ToastStack toasts={toasts} />
     </div>

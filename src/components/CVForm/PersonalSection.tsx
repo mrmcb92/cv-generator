@@ -4,7 +4,18 @@ import { useRef, useState } from "react";
 import { PersonalInfo } from "@/types/cv";
 import { Theme } from "@/types/theme";
 import { motion } from "motion/react";
-import { EnvelopeSimple, Phone, MapPin, Globe, LinkedinLogo, Camera, Trash } from "@phosphor-icons/react";
+import {
+  EnvelopeSimple,
+  Phone,
+  MapPin,
+  Globe,
+  LinkedinLogo,
+  Camera,
+  Trash,
+  Sparkle,
+  Eye,
+  EyeSlash,
+} from "@phosphor-icons/react";
 import { DBInput, SectionHeader, fieldLabelClass } from "@/components/ui/fields";
 import SuggestionChips from "@/components/ui/SuggestionChips";
 import { isValidEmail, isValidPhone, isValidUrl } from "@/lib/fieldValidation";
@@ -23,13 +34,19 @@ const ITEM = {
 };
 
 export default function PersonalSection({ data, onChange, theme }: Props) {
-  const update = (field: keyof PersonalInfo, value: string) =>
+  const update = (field: keyof PersonalInfo, value: unknown) =>
     onChange({ ...data, [field]: value });
 
   const isDark = theme.id === "dark";
   const labelClass = fieldLabelClass(theme);
   const photoRef = useRef<HTMLInputElement>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
+
+  // AI Summary generator state
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiGrammarFixing, setAiGrammarFixing] = useState(false);
+  const [summaryOptions, setSummaryOptions] = useState<Array<{ style: string; text: string }>>([]);
+  const [showAiModal, setShowAiModal] = useState(false);
 
   const handlePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -38,8 +55,58 @@ export default function PersonalSection({ data, onChange, theme }: Props) {
     try {
       setPhotoError(null);
       update("photo", await processPhoto(file));
+      update("showPhoto", true);
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : "Imaginea nu a putut fi procesată");
+    }
+  };
+
+  const handleGenerateSummary = async () => {
+    setAiGenerating(true);
+    setShowAiModal(true);
+    try {
+      const res = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "generate_summary",
+          payload: {
+            title: data.title,
+            skills: [],
+          },
+        }),
+      });
+      const json = await res.json();
+      if (json.options && json.options.length > 0) {
+        setSummaryOptions(json.options);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
+  const handleGrammarFix = async () => {
+    if (!data.summary.trim()) return;
+    setAiGrammarFixing(true);
+    try {
+      const res = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "fix_grammar",
+          payload: { text: data.summary },
+        }),
+      });
+      const json = await res.json();
+      if (json.result) {
+        update("summary", json.result);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAiGrammarFixing(false);
     }
   };
 
@@ -66,8 +133,28 @@ export default function PersonalSection({ data, onChange, theme }: Props) {
               <img src={data.photo} alt="Fotografie de profil" className="w-full h-full object-cover" />
             : <Camera size={20} weight="regular" />}
         </button>
-        <div>
-          <p className={`text-[12px] font-medium ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>Fotografie de profil</p>
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <p className={`text-[12px] font-medium ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>Fotografie de profil</p>
+            {data.photo && (
+              <button
+                type="button"
+                onClick={() => update("showPhoto", data.showPhoto === false)}
+                className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md border transition ${
+                  data.showPhoto !== false
+                    ? isDark
+                      ? "bg-cyan-950/40 border-cyan-800 text-cyan-300"
+                      : "bg-sky-50 border-sky-200 text-sky-700"
+                    : isDark
+                    ? "bg-zinc-800 border-zinc-700 text-zinc-400"
+                    : "bg-zinc-100 border-zinc-200 text-zinc-500"
+                }`}
+              >
+                {data.showPhoto !== false ? <Eye size={12} weight="bold" /> : <EyeSlash size={12} weight="bold" />}
+                {data.showPhoto !== false ? "Vizibilă în CV" : "Ascunsă din CV"}
+              </button>
+            )}
+          </div>
           <p className={`text-[10.5px] mt-0.5 ${isDark ? "text-zinc-600" : "text-zinc-400"}`}>
             Opțională — decupată automat pătrat. Apare pe template-urile Classic, Modern și Creative.
           </p>
@@ -124,8 +211,38 @@ export default function PersonalSection({ data, onChange, theme }: Props) {
         </motion.div>
 
         <motion.div variants={ITEM} className="col-span-2">
-          <label className={labelClass}>Rezumat profesional</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className={labelClass}>Rezumat profesional</label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleGenerateSummary}
+                className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded transition ${
+                  isDark ? "text-cyan-400 hover:bg-cyan-500/10" : "text-sky-600 hover:bg-sky-50"
+                }`}
+                title="Generează 3 variante de rezumat profesional cu AI"
+              >
+                <Sparkle size={12} weight="fill" />
+                Generează cu AI
+              </button>
+              {data.summary.trim() && (
+                <button
+                  type="button"
+                  disabled={aiGrammarFixing}
+                  onClick={handleGrammarFix}
+                  className={`inline-flex items-center gap-1 text-[10.5px] px-2 py-0.5 rounded transition ${
+                    isDark ? "text-zinc-400 hover:text-zinc-200" : "text-zinc-500 hover:text-zinc-800"
+                  }`}
+                  title="Corectează gramatica și diacriticele"
+                >
+                  {aiGrammarFixing ? "Se corectează..." : "Corectează textul"}
+                </button>
+              )}
+            </div>
+          </div>
+
           <DBInput value={data.summary} onChange={(v) => update("summary", v)} placeholder="Scurtă descriere a experienței și obiectivelor tale profesionale..." theme={theme} rows={4} />
+          
           <SuggestionChips
             chips={["Profesionist cu experiență în...", "Specialist în...", "Pasionat de...", "Absolvent al..."]}
             onSelect={(chip) => update("summary", data.summary ? data.summary + " " + chip : chip)}
@@ -139,8 +256,61 @@ export default function PersonalSection({ data, onChange, theme }: Props) {
               </span>
             )}
           </p>
+
+          {/* AI Summary Suggestions Modal */}
+          {showAiModal && (
+            <div className={`mt-3 p-3.5 rounded-xl border ${isDark ? "bg-zinc-900 border-zinc-700" : "bg-sky-50/70 border-sky-200"}`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[12px] font-semibold flex items-center gap-1.5">
+                  <Sparkle size={14} weight="fill" className="text-amber-500" />
+                  Sugestii generate cu AI
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowAiModal(false)}
+                  className="text-[11px] text-zinc-400 hover:text-zinc-200"
+                >
+                  Închide
+                </button>
+              </div>
+
+              {aiGenerating ? (
+                <div className="py-4 text-center text-[11.5px] text-zinc-400 animate-pulse">
+                  Generăm variante optime pentru rolul tău...
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {summaryOptions.map((opt, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-2.5 rounded-lg border text-left cursor-pointer transition ${
+                        isDark
+                          ? "bg-zinc-950/60 border-zinc-800 hover:border-cyan-500"
+                          : "bg-white border-zinc-200 hover:border-sky-500 shadow-xs"
+                      }`}
+                      onClick={() => {
+                        update("summary", opt.text);
+                        setShowAiModal(false);
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`text-[10.5px] font-medium ${isDark ? "text-cyan-400" : "text-sky-700"}`}>
+                          {opt.style}
+                        </span>
+                        <span className="text-[10px] text-zinc-400">Click pentru a aplica</span>
+                      </div>
+                      <p className={`text-[11.5px] leading-relaxed ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>
+                        {opt.text}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </motion.div>
       </div>
     </motion.div>
   );
 }
+

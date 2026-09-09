@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { WorkExperience, WorkPosition } from "@/types/cv";
 import { Theme } from "@/types/theme";
 import { motion, AnimatePresence } from "motion/react";
-import { Plus, Trash, Briefcase, CopySimple } from "@phosphor-icons/react";
+import { Plus, Trash, Briefcase, CopySimple, Sparkle } from "@phosphor-icons/react";
 import { DBInput, AddButton, SectionHeader, fieldLabelClass } from "@/components/ui/fields";
 import DraggableList from "@/components/ui/DraggableList";
 import DateInput from "@/components/ui/DateInput";
@@ -39,6 +40,7 @@ const POS_ITEM = {
 export default function ExperienceSection({ data, onChange, theme }: Props) {
   const isDark = theme.id === "dark";
   const labelClass = fieldLabelClass(theme);
+  const [loadingAiId, setLoadingAiId] = useState<string | null>(null);
 
   const addCompany = () => onChange([...data, newEntry()]);
   const removeCompany = (id: string) => onChange(data.filter((e) => e.id !== id));
@@ -74,6 +76,33 @@ export default function ExperienceSection({ data, onChange, theme }: Props) {
     onChange(data.map((e) => e.id === companyId
       ? { ...e, positions: e.positions.map((p) => p.id === posId ? { ...p, [field]: value } : p) }
       : e));
+
+  const handleAiRewrite = async (companyId: string, pos: WorkPosition, companyName: string) => {
+    if (!pos.description.trim()) return;
+    setLoadingAiId(pos.id);
+    try {
+      const res = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "rewrite_bullet",
+          payload: {
+            text: pos.description,
+            role: pos.title,
+            company: companyName,
+          },
+        }),
+      });
+      const json = await res.json();
+      if (json.result) {
+        updatePosition(companyId, pos.id, "description", json.result);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingAiId(null);
+    }
+  };
 
   const totalPositions = data.reduce((sum, e) => sum + e.positions.length, 0);
 
@@ -170,7 +199,25 @@ export default function ExperienceSection({ data, onChange, theme }: Props) {
                         </label>
                       </div>
                       <div className="col-span-2">
-                        <label className={labelClass}>Descriere</label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className={labelClass}>Descriere & realizări</label>
+                          <button
+                            type="button"
+                            disabled={!pos.description.trim() || loadingAiId === pos.id}
+                            onClick={() => handleAiRewrite(entry.id, pos, entry.company)}
+                            className={`inline-flex items-center gap-1 text-[10.5px] font-medium px-2 py-0.5 rounded transition ${
+                              loadingAiId === pos.id
+                                ? "opacity-60 cursor-not-allowed"
+                                : isDark
+                                ? "text-cyan-400 hover:bg-cyan-500/10"
+                                : "text-sky-600 hover:bg-sky-50"
+                            }`}
+                            title="Rescrie cu acțiune și impact măsurabil (formula Google XYZ / STAR)"
+                          >
+                            <Sparkle size={12} weight="fill" className={loadingAiId === pos.id ? "animate-spin" : ""} />
+                            {loadingAiId === pos.id ? "Se optimizează..." : "Îmbunătățește cu AI (STAR)"}
+                          </button>
+                        </div>
                         <DBInput rows={3} value={pos.description} onChange={(v) => updatePosition(entry.id, pos.id, "description", v)} placeholder="Responsabilități și realizări principale..." theme={theme} />
                         <SuggestionChips
                           chips={["Am coordonat...", "Am implementat...", "Am optimizat...", "Am dezvoltat...", "Am gestionat..."]}

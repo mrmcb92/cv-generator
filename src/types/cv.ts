@@ -11,6 +11,8 @@ export interface PersonalInfo {
   summary: string;
   /** Square profile photo as a data URL (image/jpeg), or empty */
   photo?: string;
+  /** Toggle visibility of photo on CV (useful for US/UK markets) */
+  showPhoto?: boolean;
 }
 
 export interface WorkPosition {
@@ -62,6 +64,28 @@ export interface DrivingLicense {
   year: string;
 }
 
+export interface ProjectItem {
+  id: string;
+  title: string;
+  role?: string;
+  link?: string;
+  github?: string;
+  startDate?: string;
+  endDate?: string;
+  description: string;
+  technologies?: string[];
+}
+
+export interface CertificationItem {
+  id: string;
+  name: string;
+  issuer: string;
+  issueDate: string;
+  expiryDate?: string;
+  credentialId?: string;
+  url?: string;
+}
+
 export interface CustomItem {
   id: string;
   name: string;
@@ -77,6 +101,18 @@ export interface CustomSection {
   items: CustomItem[];
 }
 
+export type CvDensity = "compact" | "normal" | "spacious";
+
+export interface CoverLetterData {
+  recipientName: string;
+  recipientTitle: string;
+  companyName: string;
+  jobTitle: string;
+  city: string;
+  date: string;
+  letterBody: string;
+}
+
 export interface CVData {
   personal: PersonalInfo;
   experience: WorkExperience[];
@@ -84,8 +120,23 @@ export interface CVData {
   skills: Skill[];
   languages: Language[];
   drivingLicenses: DrivingLicense[];
+  projects?: ProjectItem[];
+  certifications?: CertificationItem[];
   customSections: CustomSection[];
+  sectionOrder?: string[];
+  density?: CvDensity;
 }
+
+export const DEFAULT_SECTION_ORDER = [
+  "experience",
+  "education",
+  "projects",
+  "skills",
+  "certifications",
+  "languages",
+  "drivingLicenses",
+  "customSections",
+];
 
 export const defaultCV: CVData = {
   personal: {
@@ -98,11 +149,17 @@ export const defaultCV: CVData = {
     website: "",
     linkedin: "",
     summary: "",
+    showPhoto: true,
   },
   experience: [],
   education: [],
   skills: [],
   languages: [],
   drivingLicenses: [],
+  projects: [],
+  certifications: [],
   customSections: [],
+  sectionOrder: DEFAULT_SECTION_ORDER,
+  density: "normal",
 };
+

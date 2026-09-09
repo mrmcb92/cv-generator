@@ -61,9 +61,9 @@ const classicS = StyleSheet.create({
 });
 
 function ClassicPdf({ data, lang }: { data: CVData; lang: CvLang }) {
-  const { personal: p, experience, education, skills, languages, drivingLicenses, customSections } = data;
+  const { personal: p, experience, education, skills, languages, drivingLicenses, projects = [], certifications = [], customSections } = data;
   const L = CV_LABELS[lang];
-  const fmtDate = (d: string) => fmtDateL(d, lang);
+  const fmtDate = (d?: string) => d ? fmtDateL(d, lang) : "";
   return (
     <Document>
       <Page size="A4" style={classicS.page}>
@@ -81,7 +81,7 @@ function ClassicPdf({ data, lang }: { data: CVData; lang: CvLang }) {
               {p.linkedin && <Link src={p.linkedin.startsWith('http') ? p.linkedin : `https://${p.linkedin}`} style={classicS.contactItem}>{p.linkedin}</Link>}
             </View>
           </View>
-          {p.photo ? (
+          {p.photo && p.showPhoto !== false ? (
             // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image, not an HTML img
             <Image src={p.photo} style={{ width: 64, height: 64, borderRadius: 32, marginLeft: 16 }} />
           ) : null}
@@ -114,6 +114,31 @@ function ClassicPdf({ data, lang }: { data: CVData; lang: CvLang }) {
               ))}
             </View>
           )}
+          {projects.length > 0 && (
+            <View style={classicS.section}>
+              <Text style={classicS.secTitle}>{L.projects}</Text>
+              {projects.map(pr => (
+                <View key={pr.id} wrap={false} style={[classicS.expItem, { marginBottom: 6 }]}>
+                  <View style={classicS.expRow}>
+                    <Text style={classicS.expTitle}>
+                      {pr.title}{pr.role ? `  ·  ${pr.role}` : ""}
+                    </Text>
+                    {(pr.startDate || pr.endDate) ? (
+                      <Text style={classicS.expDate}>
+                        {fmtDate(pr.startDate)} {pr.endDate ? `– ${fmtDate(pr.endDate)}` : ""}
+                      </Text>
+                    ) : null}
+                  </View>
+                  {pr.description ? <Text style={classicS.expDesc}>{pr.description}</Text> : null}
+                  {pr.technologies && pr.technologies.length > 0 ? (
+                    <Text style={[classicS.expDesc, { color: "#64748b", marginTop: 1 }]}>
+                      {L.technologies}: {pr.technologies.join(", ")}
+                    </Text>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          )}
           {education.length > 0 && (
             <View style={classicS.section}>
               <Text style={classicS.secTitle}>{L.education}</Text>
@@ -127,6 +152,19 @@ function ClassicPdf({ data, lang }: { data: CVData; lang: CvLang }) {
                       {fmtDate(e.startDate)} – {fmtDate(e.endDate)}
                     </Text>
                   </View>
+                </View>
+              ))}
+            </View>
+          )}
+          {certifications.length > 0 && (
+            <View style={classicS.section}>
+              <Text style={classicS.secTitle}>{L.certifications}</Text>
+              {certifications.map(c => (
+                <View key={c.id} wrap={false} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 3 }}>
+                  <Text style={{ fontSize: 10, color: "#1e293b", fontWeight: "bold" }}>
+                    {c.name}{c.issuer ? `  ·  ${c.issuer}` : ""}
+                  </Text>
+                  {c.issueDate ? <Text style={classicS.expDate}>{fmtDate(c.issueDate)}</Text> : null}
                 </View>
               ))}
             </View>

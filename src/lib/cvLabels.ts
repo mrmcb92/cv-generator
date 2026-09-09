@@ -14,6 +14,9 @@ export interface CvLabels {
   skillsAndLangs: string;
   driving: string;
   category: string;
+  projects: string;
+  certifications: string;
+  technologies: string;
   present: string;
   inWord: string;
   months: string[];
@@ -31,6 +34,9 @@ export const CV_LABELS: Record<CvLang, CvLabels> = {
     skillsAndLangs: "Competențe & Limbi",
     driving: "Permis de conducere",
     category: "Categoria",
+    projects: "Proiecte & Portofoliu",
+    certifications: "Certificări & Cursuri",
+    technologies: "Tehnologii",
     present: "Prezent",
     inWord: "în",
     months: ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Nov", "Dec"],
@@ -46,6 +52,9 @@ export const CV_LABELS: Record<CvLang, CvLabels> = {
     skillsAndLangs: "Skills & Languages",
     driving: "Driving licence",
     category: "Category",
+    projects: "Projects & Portfolio",
+    certifications: "Certifications & Courses",
+    technologies: "Technologies",
     present: "Present",
     inWord: "in",
     months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],

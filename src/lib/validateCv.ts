@@ -54,6 +54,7 @@ export function validateCV(input: unknown): CVData | null {
       summary:   str(p.summary),
       // only accept inline image data, never external URLs
       photo:     str(p.photo).startsWith("data:image/") ? str(p.photo) : "",
+      showPhoto: p.showPhoto !== false,
     },
     experience: arr(d.experience).map((e) => ({
       id: id(e.id),
@@ -91,6 +92,28 @@ export function validateCV(input: unknown): CVData | null {
       category: oneOf<DrivingCategory>(dl.category, DRIVING_CATEGORIES, "B"),
       year: str(dl.year),
     })),
+    projects: arr(d.projects).map((proj) => ({
+      id: id(proj.id),
+      title: str(proj.title),
+      role: str(proj.role),
+      link: str(proj.link),
+      github: str(proj.github),
+      startDate: str(proj.startDate),
+      endDate: str(proj.endDate),
+      description: str(proj.description),
+      technologies: Array.isArray(proj.technologies)
+        ? (proj.technologies as unknown[]).map((t) => str(t)).filter(Boolean)
+        : [],
+    })),
+    certifications: arr(d.certifications).map((cert) => ({
+      id: id(cert.id),
+      name: str(cert.name),
+      issuer: str(cert.issuer),
+      issueDate: str(cert.issueDate),
+      expiryDate: str(cert.expiryDate),
+      credentialId: str(cert.credentialId),
+      url: str(cert.url),
+    })),
     customSections: arr(d.customSections).map((cs) => ({
       id: id(cs.id),
       title: str(cs.title),
@@ -102,6 +125,10 @@ export function validateCV(input: unknown): CVData | null {
         description: str(it.description),
       })),
     })),
+    sectionOrder: Array.isArray(d.sectionOrder)
+      ? (d.sectionOrder as unknown[]).map((s) => str(s)).filter(Boolean)
+      : defaultCV.sectionOrder,
+    density: oneOf(d.density, ["compact", "normal", "spacious"] as const, "normal"),
   };
 }
 
